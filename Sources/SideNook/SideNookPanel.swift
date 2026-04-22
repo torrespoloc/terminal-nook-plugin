@@ -4,6 +4,8 @@ import AppKit
 @MainActor
 final class SideNookPanel: NSPanel {
 
+    var onDragEnd: (() -> Void)?
+
     override var canBecomeKey: Bool { true }
 
     override init(
@@ -16,9 +18,14 @@ final class SideNookPanel: NSPanel {
 
         level = .floating
         collectionBehavior = [.canJoinAllSpaces, .stationary, .fullScreenAuxiliary]
-        isMovableByWindowBackground = false
+        isMovableByWindowBackground = true
         backgroundColor = .clear
         isOpaque = false
         hasShadow = true
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        super.mouseUp(with: event)
+        onDragEnd?()
     }
 }

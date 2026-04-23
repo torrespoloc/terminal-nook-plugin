@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: Any?
     private var moveObserver: NSObjectProtocol?
     private var keyMonitor: Any?
+    private var globalHotkeyMonitor: Any?
     private var statusItem: NSStatusItem?
     /// Guards against circular updates: setFrame → didMove → applyStateChange → setFrame
     private var isUpdatingFrame = false
@@ -127,6 +128,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return nil
             default:
                 return event
+            }
+        }
+
+        // Global hotkey: ⌃` (Control + backtick, keyCode 50) toggles expand/collapse
+        // from any app. The event is observed but not consumed (requires CGEventTap
+        // for consumption — acceptable for this shortcut which rarely conflicts).
+        globalHotkeyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return }
+            if event.keyCode == 50 && event.modifierFlags.intersection([.control, .command, .shift, .option]) == .control {
+                DispatchQueue.main.async {
+                    if self.state.isExpanded { self.collapse() } else { self.expand() }
+                }
             }
         }
 
@@ -378,6 +391,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let monitor { NSEvent.removeMonitor(monitor) }
         if let moveObserver { NotificationCenter.default.removeObserver(moveObserver) }
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        if let globalHotkeyMonitor { NSEvent.removeMonitor(globalHotkeyMonitor) }
         for session in state.sessions { session.terminate() }
     }
 }

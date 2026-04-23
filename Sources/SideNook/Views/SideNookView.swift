@@ -43,13 +43,25 @@ struct SideNookView: View {
 
             // Expanded content
             if state.isExpanded, let session = state.activeSession {
+                let dividerColor = state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
                 ZStack {
-                    VStack(spacing: 0) {
-                        NavBarView(state: state)
-
-                        TerminalContainerView(session: session, isDark: state.isDark)
-                            .padding(.horizontal, 8)
-                            .padding(.bottom, 8)
+                    if state.tabLayout == .leftSidebar {
+                        HStack(spacing: 0) {
+                            SidebarNavView(state: state)
+                            Rectangle().fill(dividerColor).frame(width: 0.5)
+                            TerminalContainerView(session: session, isDark: state.isDark)
+                                .padding(.top, 8)
+                                .padding(.trailing, 8)
+                                .padding(.bottom, 8)
+                                .padding(.leading, 4)
+                        }
+                    } else {
+                        VStack(spacing: 0) {
+                            NavBarView(state: state)
+                            TerminalContainerView(session: session, isDark: state.isDark)
+                                .padding(.horizontal, 8)
+                                .padding(.bottom, 8)
+                        }
                     }
 
                     // About overlay

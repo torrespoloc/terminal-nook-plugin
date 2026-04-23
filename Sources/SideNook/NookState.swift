@@ -1,6 +1,7 @@
 // Sources/SideNook/NookState.swift
 import Observation
 import AppKit
+import ServiceManagement
 
 @MainActor
 @Observable
@@ -20,6 +21,10 @@ final class NookState {
         case dark, light
     }
 
+    enum TabLayout: String {
+        case topBar, leftSidebar
+    }
+
     var isExpanded: Bool = false
     var isPinned: Bool = false
     var panelPosition: CGPoint
@@ -27,6 +32,7 @@ final class NookState {
     var expandedSize: CGSize = CGSize(width: 450, height: 600)
     var dockedEdge: ScreenEdge = .top
     var appearance: Appearance = .dark
+    var tabLayout: TabLayout = .leftSidebar
     var fontSize: CGFloat = 13
     var showSettings: Bool = false
     var showAbout: Bool = false
@@ -38,6 +44,17 @@ final class NookState {
 
     var isVerticalEdge: Bool { dockedEdge == .left || dockedEdge == .right }
     var isDark: Bool { appearance == .dark }
+
+    /// Launch at Login via SMAppService. Requires app to be installed (not run from swift build).
+    var launchAtLogin: Bool {
+        get { SMAppService.mainApp.status == .enabled }
+        set {
+            do {
+                if newValue { try SMAppService.mainApp.register() }
+                else        { try SMAppService.mainApp.unregister() }
+            } catch { /* silently fail if app isn't properly installed */ }
+        }
+    }
 
     var activeSession: TerminalSession? {
         sessions.first { $0.id == activeSessionID }

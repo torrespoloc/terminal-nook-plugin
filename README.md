@@ -105,7 +105,8 @@ SideNook/
 ├── Tests/SideNookTests/              # Unit tests (NookState)
 ├── Package.swift                     # SPM manifest (SwiftTerm dependency)
 ├── Makefile                          # Build, run, install targets
-└── PRD.md                            # Product requirements
+└── docs/
+    └── PRD.md                        # Product requirements
 ```
 
 ---

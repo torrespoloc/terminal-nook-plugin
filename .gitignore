@@ -1,6 +1,18 @@
+# Build artifacts
 .build/
 *.app/
-*.xcuserdata/
-.DS_Store
 *.o
 *.d
+
+# Xcode
+*.xcuserdata/
+
+# macOS
+.DS_Store
+
+# Editor tooling
+.cursor/
+.claude/
+
+# Debug-only files (never publish)
+Sources/SideNook/DebugLogger.swift

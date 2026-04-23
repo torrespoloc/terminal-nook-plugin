@@ -16,6 +16,9 @@ struct SettingsPopoverView: View {
     private var dividerColor: Color {
         state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
     }
+    private var segmentActiveBg: Color {
+        state.isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
+    }
 
     @State private var showShortcuts = false
 
@@ -31,14 +34,37 @@ struct SettingsPopoverView: View {
 
             sectionDivider
 
+            // Tab Layout
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Image(systemName: "sidebar.left")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(fgMuted)
+                        .frame(width: 18)
+                    Text("Tab Layout")
+                        .font(.system(size: 14))
+                        .foregroundStyle(fg)
+                }
+
+                HStack(spacing: 4) {
+                    layoutButton(label: "Sidebar", value: .leftSidebar)
+                    layoutButton(label: "Top Bar", value: .topBar)
+                }
+                .padding(.leading, 26)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+
+            sectionDivider
+
             // Pin on Top
             HStack(spacing: 8) {
                 Image(systemName: state.isPinned ? "pin.fill" : "pin.slash")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(fgMuted)
                     .frame(width: 18)
                 Text("Pin on Top")
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .foregroundStyle(fg)
                 Spacer()
                 Toggle("", isOn: Binding(
@@ -46,49 +72,49 @@ struct SettingsPopoverView: View {
                     set: { state.isPinned = $0 }
                 ))
                 .toggleStyle(.switch)
-                .scaleEffect(0.7)
-                .frame(width: 40)
+                .scaleEffect(0.75)
+                .frame(width: 44)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
 
             sectionDivider
 
             // Font Size
             HStack(spacing: 8) {
                 Image(systemName: "textformat.size")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(fgMuted)
                     .frame(width: 18)
                 Text("Font Size")
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .foregroundStyle(fg)
                 Spacer()
                 HStack(spacing: 4) {
                     Button(action: { state.zoomOut() }) {
                         Image(systemName: "minus")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(fgMuted)
-                            .frame(width: 22, height: 22)
+                            .frame(width: 24, height: 24)
                             .background(
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
                                     .fill(state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
                             )
                     }
                     .buttonStyle(.plain)
 
                     Text("\(Int(state.fontSize))")
-                        .font(.system(size: 11, weight: .medium, design: .monospaced))
+                        .font(.system(size: 13, weight: .medium, design: .monospaced))
                         .foregroundStyle(fg)
-                        .frame(width: 24)
+                        .frame(width: 26)
 
                     Button(action: { state.zoomIn() }) {
                         Image(systemName: "plus")
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(fgMuted)
-                            .frame(width: 22, height: 22)
+                            .frame(width: 24, height: 24)
                             .background(
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
                                     .fill(state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
                             )
                     }
@@ -96,19 +122,19 @@ struct SettingsPopoverView: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
 
             sectionDivider
 
-            // Default Position
-            VStack(alignment: .leading, spacing: 6) {
+            // Dock Position
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Image(systemName: "rectangle.dashed")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(fgMuted)
                         .frame(width: 18)
                     Text("Dock Position")
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .foregroundStyle(fg)
                 }
 
@@ -116,15 +142,13 @@ struct SettingsPopoverView: View {
                     ForEach(NookState.ScreenEdge.allCases, id: \.rawValue) { edge in
                         Button(action: { state.dockedEdge = edge }) {
                             Text(edge.rawValue.capitalized)
-                                .font(.system(size: 10, weight: state.dockedEdge == edge ? .semibold : .regular))
+                                .font(.system(size: 12, weight: state.dockedEdge == edge ? .semibold : .regular))
                                 .foregroundStyle(state.dockedEdge == edge ? fg : fgMuted)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 5)
                                 .background(
                                     RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                        .fill(state.dockedEdge == edge
-                                              ? (state.isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07))
-                                              : Color.clear)
+                                        .fill(state.dockedEdge == edge ? segmentActiveBg : Color.clear)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -133,7 +157,30 @@ struct SettingsPopoverView: View {
                 .padding(.leading, 26)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
+
+            sectionDivider
+
+            // Launch at Login
+            HStack(spacing: 8) {
+                Image(systemName: "arrow.up.circle")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(fgMuted)
+                    .frame(width: 18)
+                Text("Launch at Login")
+                    .font(.system(size: 14))
+                    .foregroundStyle(fg)
+                Spacer()
+                Toggle("", isOn: Binding(
+                    get: { state.launchAtLogin },
+                    set: { state.launchAtLogin = $0 }
+                ))
+                .toggleStyle(.switch)
+                .scaleEffect(0.75)
+                .frame(width: 44)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
 
             sectionDivider
 
@@ -141,19 +188,19 @@ struct SettingsPopoverView: View {
             Button(action: { withAnimation(.easeOut(duration: 0.15)) { showShortcuts.toggle() } }) {
                 HStack(spacing: 8) {
                     Image(systemName: "keyboard")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(fgMuted)
                         .frame(width: 18)
                     Text("Keyboard Shortcuts")
-                        .font(.system(size: 12))
+                        .font(.system(size: 14))
                         .foregroundStyle(fg)
                     Spacer()
                     Image(systemName: showShortcuts ? "chevron.up" : "chevron.down")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(fgMuted)
                 }
                 .padding(.horizontal, 12)
-                .padding(.vertical, 8)
+                .padding(.vertical, 10)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -170,10 +217,32 @@ struct SettingsPopoverView: View {
                 state.showSettings = false
                 state.showAbout = true
             }
+
+            sectionDivider
+
+            // Quit
+            Button(action: { NSApplication.shared.terminate(nil) }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "power")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.red.opacity(0.70))
+                        .frame(width: 18)
+                    Text("Quit SideNook")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color.red.opacity(0.80))
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
         }
-        .frame(width: 250)
+        .frame(width: 260)
         .background(bg)
     }
+
+    // MARK: - Helpers
 
     private var sectionDivider: some View {
         Rectangle()
@@ -186,17 +255,33 @@ struct SettingsPopoverView: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(fgMuted)
                     .frame(width: 18)
                 Text(label)
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .foregroundStyle(fg)
                 Spacer()
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 10)
             .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func layoutButton(label: String, value: NookState.TabLayout) -> some View {
+        let isSelected = state.tabLayout == value
+        return Button(action: { state.tabLayout = value }) {
+            Text(label)
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? fg : fgMuted)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .fill(isSelected ? segmentActiveBg : Color.clear)
+                )
         }
         .buttonStyle(.plain)
     }

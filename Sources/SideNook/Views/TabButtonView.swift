@@ -13,22 +13,14 @@ struct TabButtonView: View {
     // MARK: - Palette
 
     private var fgColor: Color {
-        if isActive {
-            return isDark ? Color.white.opacity(0.90) : Color.black.opacity(0.85)
-        }
-        if isHovered {
-            return isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.65)
-        }
+        if isActive  { return isDark ? Color.white.opacity(0.90) : Color.black.opacity(0.85) }
+        if isHovered { return isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.65) }
         return isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.42)
     }
 
     private var tabBg: Color {
-        if isActive {
-            return isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.06)
-        }
-        if isHovered {
-            return isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.03)
-        }
+        if isActive  { return isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.06) }
+        if isHovered { return isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.03) }
         return Color.clear
     }
 
@@ -37,7 +29,7 @@ struct TabButtonView: View {
     }
 
     private var closeFg: Color {
-        isDark ? Color.white.opacity(0.40) : Color.black.opacity(0.40)
+        isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45)
     }
     private var closeHoverBg: Color {
         isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
@@ -46,17 +38,14 @@ struct TabButtonView: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 6) {
-                // Session status dot
                 Circle()
                     .fill(session.isAlive
-                        ? (session.isExternal
-                            ? Color.blue.opacity(0.6)
-                            : Color.green.opacity(0.5))
+                        ? (session.isExternal ? Color.blue.opacity(0.6) : Color.green.opacity(0.5))
                         : Color.red.opacity(0.4))
                     .frame(width: 5, height: 5)
 
                 Text(session.title)
-                    .font(.system(size: 11.5, weight: isActive ? .semibold : .regular))
+                    .font(.system(size: 13, weight: isActive ? .semibold : .regular))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -66,7 +55,7 @@ struct TabButtonView: View {
 
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 7.5, weight: .bold))
+                            .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(closeFg)
                             .frame(width: 16, height: 16)
                             .background(closeHoverBg, in: Circle())

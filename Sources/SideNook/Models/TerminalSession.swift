@@ -100,6 +100,19 @@ final class TerminalSession: Identifiable {
         }
     }
 
+    /// Restart the shell process inside the existing terminal view.
+    /// Clears highlight rows but preserves scroll buffer so history stays visible.
+    func restart() {
+        isAlive = true
+        inputHighlightRows = []
+        let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+        var env = ProcessInfo.processInfo.environment
+        env["TERM"] = "xterm-256color"
+        env["COLORTERM"] = "truecolor"
+        let envArray = env.map { "\($0.key)=\($0.value)" }
+        terminalView.startProcess(executable: shell, args: ["-l"], environment: envArray)
+    }
+
     func terminate() {
         isAlive = false
     }

@@ -164,7 +164,7 @@ struct NavIconButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 12, weight: .medium))
+                .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isOn ? fgActive : (isHovered ? fgActive : fgMuted))
                 .frame(width: 30, height: 30)
                 .background(

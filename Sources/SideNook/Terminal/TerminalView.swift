@@ -4,18 +4,16 @@ import SwiftTerm
 
 /// SwiftUI wrapper that displays a pre-created LocalProcessTerminalView
 /// from a TerminalSession. The session owns the terminal view and its PTY,
-/// so terminal state survives tab switches.
+/// so terminal state survives tab switches. SwiftUI manages the NSView frame.
 struct TerminalSessionView: NSViewRepresentable {
     let session: TerminalSession
-    let containerSize: CGSize
 
     func makeNSView(context: Context) -> LocalProcessTerminalView {
         session.terminalView
     }
 
     func updateNSView(_ nsView: LocalProcessTerminalView, context: Context) {
-        guard nsView.frame.size != containerSize else { return }
-        nsView.frame.size = containerSize
-        nsView.needsLayout = true
+        // SwiftUI's layout engine sets the NSView frame, which triggers
+        // SwiftTerm's setFrameSize → PTY resize. No manual sizing needed.
     }
 }

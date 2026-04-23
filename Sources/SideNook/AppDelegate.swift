@@ -15,6 +15,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: SideNookPanel!
     private var monitor: Any?
     private var moveObserver: NSObjectProtocol?
+    private var keyMonitor: Any?
+    /// Guards against circular updates: setFrame → didMove → applyStateChange → setFrame
+    private var isUpdatingFrame = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard NSScreen.main != nil else { return }
@@ -31,7 +34,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let hostingView = TrackingHostingView(
             rootView: rootView,
             onMouseExit: { [weak self] in
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                     guard let self else { return }
                     let mouse = NSEvent.mouseLocation
                     if !self.state.isPinned && !self.panel.frame.contains(mouse) {
@@ -58,24 +61,72 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Track panel moves (drag) and snap to nearest edge
+        // Track panel moves (drag) — only update position, don't trigger recomputation
         moveObserver = NotificationCenter.default.addObserver(
             forName: NSWindow.didMoveNotification,
             object: panel,
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                guard let self, self.state.isExpanded else { return }
+                guard let self, self.state.isExpanded, !self.isUpdatingFrame else { return }
                 self.state.panelPosition = self.panel.frame.origin
             }
         }
 
-        // Snap to edge after drag ends
-        NotificationCenter.default.addObserver(
-            forName: NSWindow.didEndLiveResizeNotification,
-            object: panel,
-            queue: .main
-        ) { _ in }
+        // Keyboard shortcuts matching Terminal.app
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self else { return event }
+            let cmd = event.modifierFlags.contains(.command)
+            let shift = event.modifierFlags.contains(.shift)
+            let chars = event.charactersIgnoringModifiers ?? ""
+
+            // Record user input rows for highlight overlay (Return = keyCode 36, numpad Enter = 76)
+            if !cmd, (event.keyCode == 36 || event.keyCode == 76) {
+                self.state.activeSession?.recordInputRow()
+            }
+
+            guard cmd else { return event }
+
+            switch chars {
+            case "+", "=":
+                self.state.zoomIn(); return nil
+            case "-":
+                self.state.zoomOut(); return nil
+            case "0":
+                self.state.fontSize = 13
+                self.state.applyFontToAllSessions()
+                return nil
+            case "t" where !shift:
+                if self.state.sessions.count < NookState.maxTabs {
+                    self.state.createSession()
+                }
+                return nil
+            case "w" where !shift:
+                if let id = self.state.activeSessionID {
+                    self.state.closeSession(id)
+                }
+                return nil
+            case "[" where shift, "{":
+                self.switchToPreviousTab(); return nil
+            case "]" where shift, "}":
+                self.switchToNextTab(); return nil
+            case "k":
+                if let session = self.state.activeSession {
+                    session.terminalView.feed(text: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
+                }
+                return nil
+            case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+                if let num = Int(chars) {
+                    let index = num - 1
+                    if index < self.state.sessions.count {
+                        self.state.switchToSession(self.state.sessions[index].id)
+                    }
+                }
+                return nil
+            default:
+                return event
+            }
+        }
 
         startObservingState()
     }
@@ -86,8 +137,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         withObservationTracking {
             _ = state.isExpanded
             _ = state.isPinned
-            _ = state.expandedSize
             _ = state.dockedEdge
+            // Note: NOT observing expandedSize or panelPosition here —
+            // those are updated directly by resize handles and drag,
+            // which manage the panel frame themselves.
         } onChange: { [weak self] in
             DispatchQueue.main.async {
                 self?.applyStateChange()
@@ -111,8 +164,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Apply State Changes
 
     private func applyStateChange() {
-        guard let screen = NSScreen.main else { return }
-        let screenFrame = screen.visibleFrame
+        let screenFrame = panelScreen.visibleFrame
 
         // If unpinned while expanded, check if mouse is outside and collapse
         if state.isExpanded && !state.isPinned {
@@ -122,6 +174,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
         }
+
+        isUpdatingFrame = true
+        defer { isUpdatingFrame = false }
 
         if state.isExpanded {
             let size = NSSize(
@@ -151,7 +206,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Edge-Adaptive Geometry
 
-    /// Pill dimensions depend on docked edge: tall+thin for left/right, wide+thin for top/bottom.
     private func pillDimensions(for edge: NookState.ScreenEdge) -> NSSize {
         switch edge {
         case .left, .right:
@@ -161,39 +215,54 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    /// Where the pill sits when collapsed — snapped to the docked edge.
+    /// Pill origin when collapsing — derived from the stable pillEdgeOffset anchor,
+    /// not from the expanded panel position, so the pill never drifts.
     private func pillOrigin(screenFrame: NSRect) -> CGPoint {
-        let pos = state.panelPosition
+        let offset = state.pillEdgeOffset
         switch state.dockedEdge {
         case .left:
-            return CGPoint(x: screenFrame.minX, y: pos.y)
+            return CGPoint(x: screenFrame.minX, y: offset)
         case .right:
-            return CGPoint(x: screenFrame.maxX - Constants.pillWidth, y: pos.y)
+            return CGPoint(x: screenFrame.maxX - Constants.pillWidth, y: offset)
         case .top:
-            return CGPoint(x: pos.x, y: screenFrame.maxY - Constants.pillWidth)
+            return CGPoint(x: offset, y: screenFrame.maxY - Constants.pillWidth)
         case .bottom:
-            return CGPoint(x: pos.x, y: screenFrame.minY)
+            return CGPoint(x: offset, y: screenFrame.minY)
         }
     }
 
-    /// Where the expanded container opens from — anchored to the docked edge.
+    /// Expanded origin — derived from the stable pillEdgeOffset anchor.
+    /// Top/bottom: aligns left or right edge of window with pill based on 50% breakpoint.
+    /// Left/right: centers vertically on pill midpoint.
     private func expandedOrigin(screenFrame: NSRect) -> CGPoint {
-        let pos = state.panelPosition
+        let offset = state.pillEdgeOffset
         let w = state.expandedSize.width
         let h = state.expandedSize.height
         switch state.dockedEdge {
         case .left:
-            return CGPoint(x: screenFrame.minX, y: pos.y)
+            return CGPoint(x: screenFrame.minX,
+                           y: offset + Constants.pillHeight / 2 - h / 2)
         case .right:
-            return CGPoint(x: screenFrame.maxX - w, y: pos.y)
+            return CGPoint(x: screenFrame.maxX - w,
+                           y: offset + Constants.pillHeight / 2 - h / 2)
         case .top:
-            return CGPoint(x: pos.x, y: screenFrame.maxY - h)
+            let pillCenterX = offset + Constants.pillHeight / 2
+            if pillCenterX < screenFrame.midX {
+                return CGPoint(x: offset, y: screenFrame.maxY - h)
+            } else {
+                return CGPoint(x: offset + Constants.pillHeight - w, y: screenFrame.maxY - h)
+            }
         case .bottom:
-            return CGPoint(x: pos.x, y: screenFrame.minY)
+            let pillCenterX = offset + Constants.pillHeight / 2
+            if pillCenterX < screenFrame.midX {
+                return CGPoint(x: offset, y: screenFrame.minY)
+            } else {
+                return CGPoint(x: offset + Constants.pillHeight - w, y: screenFrame.minY)
+            }
         }
     }
 
-    /// The hit-test rect for the collapsed pill — a generous zone around the pill.
+    /// Hit-test rect for the collapsed pill.
     private func hitTestRect() -> NSRect {
         let panelFrame = panel.frame
         let depth = Constants.hitTestDepth
@@ -215,20 +284,45 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Snap to Edge
 
-    /// Called after a drag to detect and snap to the nearest edge.
     func snapToNearestEdge() {
-        guard let screen = NSScreen.main else { return }
-        let screenFrame = screen.visibleFrame
+        let screenFrame = panelScreen.visibleFrame
         let panelFrame = panel.frame
-        let center = CGPoint(
-            x: panelFrame.midX,
-            y: panelFrame.midY
-        )
+        let center = CGPoint(x: panelFrame.midX, y: panelFrame.midY)
         let edge = nearestScreenEdge(panelCenter: center, screenFrame: screenFrame)
         state.dockedEdge = edge
+        switch edge {
+        case .left, .right:
+            state.pillEdgeOffset = panelFrame.midY - Constants.pillHeight / 2
+        case .top, .bottom:
+            state.pillEdgeOffset = panelFrame.midX - Constants.pillHeight / 2
+        }
+    }
+
+    // MARK: - Tab Navigation
+
+    private func switchToNextTab() {
+        guard let activeID = state.activeSessionID,
+              let index = state.sessions.firstIndex(where: { $0.id == activeID }) else { return }
+        let next = (index + 1) % state.sessions.count
+        state.switchToSession(state.sessions[next].id)
+    }
+
+    private func switchToPreviousTab() {
+        guard let activeID = state.activeSessionID,
+              let index = state.sessions.firstIndex(where: { $0.id == activeID }) else { return }
+        let prev = (index - 1 + state.sessions.count) % state.sessions.count
+        state.switchToSession(state.sessions[prev].id)
     }
 
     // MARK: - Helpers
+
+    /// The screen that currently contains the panel, used for all geometry.
+    /// Falls back gracefully so callers never receive nil.
+    private var panelScreen: NSScreen {
+        NSScreen.screens.first { $0.frame.intersects(panel.frame) }
+            ?? NSScreen.main
+            ?? NSScreen.screens[0]
+    }
 
     private func clampToScreen(origin: CGPoint, size: NSSize, screenFrame: NSRect) -> CGPoint {
         let x = min(max(origin.x, screenFrame.minX), screenFrame.maxX - size.width)
@@ -239,6 +333,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         if let monitor { NSEvent.removeMonitor(monitor) }
         if let moveObserver { NotificationCenter.default.removeObserver(moveObserver) }
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         for session in state.sessions { session.terminate() }
     }
 }

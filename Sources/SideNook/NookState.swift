@@ -8,16 +8,28 @@ final class NookState {
     static let minExpandedSize = CGSize(width: 300, height: 300)
     static let maxExpandedSize = CGSize(width: 900, height: 900)
     static let maxTabs = 20
+    static let minFontSize: CGFloat = 9
+    static let maxFontSize: CGFloat = 28
+    static let fontSizeStep: CGFloat = 2
 
     enum ScreenEdge: String, CaseIterable {
         case left, right, top, bottom
     }
 
+    enum Appearance: String {
+        case dark, light
+    }
+
     var isExpanded: Bool = false
     var isPinned: Bool = false
     var panelPosition: CGPoint
+    var pillEdgeOffset: CGFloat = 0  // X for top/bottom edges; Y for left/right edges
     var expandedSize: CGSize = CGSize(width: 450, height: 600)
-    var dockedEdge: ScreenEdge = .left
+    var dockedEdge: ScreenEdge = .top
+    var appearance: Appearance = .dark
+    var fontSize: CGFloat = 13
+    var showSettings: Bool = false
+    var showAbout: Bool = false
 
     // Tab/session management
     var sessions: [TerminalSession] = []
@@ -25,19 +37,27 @@ final class NookState {
     private var sessionCounter: Int = 0
 
     var isVerticalEdge: Bool { dockedEdge == .left || dockedEdge == .right }
+    var isDark: Bool { appearance == .dark }
 
     var activeSession: TerminalSession? {
         sessions.first { $0.id == activeSessionID }
     }
 
+    private var contentSize: CGSize {
+        CGSize(
+            width: expandedSize.width - 24,
+            height: expandedSize.height - 48
+        )
+    }
+
     init() {
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let frame = screen.visibleFrame
-        self.panelPosition = CGPoint(
-            x: frame.minX,
-            y: frame.midY - 60
-        )
-        // Create the first session
+        // Default: top edge, pill centered horizontally
+        let centerOffset = frame.midX - 60  // 60 = pillHeight/2
+        self.panelPosition = CGPoint(x: centerOffset, y: frame.maxY - 6)
+        self.pillEdgeOffset = centerOffset
+        // Create one default session
         let _ = createSession()
     }
 
@@ -46,10 +66,46 @@ final class NookState {
     func toggle()   { isExpanded.toggle() }
     func togglePin() { isPinned.toggle() }
 
+    func toggleAppearance() {
+        appearance = isDark ? .light : .dark
+        applyAppearanceToAllSessions()
+    }
+
+    func zoomIn() {
+        fontSize = min(fontSize + Self.fontSizeStep, Self.maxFontSize)
+        applyFontToAllSessions()
+    }
+
+    func zoomOut() {
+        fontSize = max(fontSize - Self.fontSizeStep, Self.minFontSize)
+        applyFontToAllSessions()
+    }
+
+    func applyFontToAllSessions() {
+        let font = NSFont(name: "SF Mono", size: fontSize)
+            ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        for session in sessions {
+            session.terminalView.font = font
+        }
+    }
+
+    private func applyAppearanceToAllSessions() {
+        for session in sessions {
+            session.applyAppearance(appearance)
+        }
+    }
+
+    // MARK: - Session Management
+
     @discardableResult
     func createSession() -> TerminalSession {
         sessionCounter += 1
-        let session = TerminalSession(index: sessionCounter)
+        let session = TerminalSession(
+            index: sessionCounter,
+            fontSize: fontSize,
+            appearance: appearance,
+            initialSize: contentSize
+        )
         sessions.append(session)
         activeSessionID = session.id
         return session
@@ -58,7 +114,6 @@ final class NookState {
     func closeSession(_ id: UUID) {
         guard let index = sessions.firstIndex(where: { $0.id == id }) else { return }
 
-        // If closing the last tab, create a new one first
         if sessions.count == 1 {
             createSession()
         }
@@ -67,7 +122,6 @@ final class NookState {
         session.terminate()
         sessions.remove(at: index)
 
-        // Switch to adjacent tab if we closed the active one
         if activeSessionID == id {
             let newIndex = min(index, sessions.count - 1)
             activeSessionID = sessions[newIndex].id

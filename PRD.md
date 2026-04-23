@@ -2,7 +2,7 @@
 
 **Version:** 1.0  
 **Date:** 2026-04-20  
-**Status:** Draft  
+**Status:** v1.0 Shipped (2026-04-23)  
 
 ---
 
@@ -16,7 +16,7 @@ Developers and power users constantly switch between their primary app and a ter
 
 ### Solution
 
-A 6×120pt black pill lives permanently at the center-left edge of the screen. Hovering over it causes it to spring-expand into a 450×600pt terminal container. Moving away collapses it. The user never has to think about it — it's just there.
+A slim black pill lives permanently at the screen edge (default: top-center). Hovering over it causes it to spring-expand into a 450×600pt terminal container. Moving away collapses it. The pill can be dragged to any of the four screen edges; the panel snaps and adapts its expand direction automatically.
 
 ---
 
@@ -50,7 +50,7 @@ A 6×120pt black pill lives permanently at the center-left edge of the screen. H
 |---|---|---|
 | UI-1 | As a user, I see a discreet black pill at the left screen edge at all times | Pill is 6×120pt, visible on all Spaces and fullscreen apps |
 | UI-2 | As a user, hovering near the pill causes it to spring-expand | Expansion uses `interpolatingSpring(stiffness:280, damping:22)` — snappy, overshoots slightly |
-| UI-3 | As a user, moving my mouse away collapses the nook | 250ms debounce prevents flicker; collapses only if cursor truly left the area |
+| UI-3 | As a user, moving my mouse away collapses the nook | 300ms debounce prevents flicker; collapses only if cursor truly left the area |
 | UI-4 | As a user, the nook looks physically premium | Deep black (96% opacity), 0.5pt white border at 10% opacity, stadium radius when collapsed, 22pt radius when expanded |
 | UI-5 | As a user, the expanded nook shows a focused, dark content area | Content zone is clipped to 10pt inner radius; placeholder (black) until Phase 2 |
 | UI-6 | As a user, the nook never activates another app or steals focus | NSPanel with `.nonactivatingPanel` style — no Dock bounce, no app switch |
@@ -136,21 +136,22 @@ SideNook.app (SPM executable)
 ### Expanded State
 | Property | Value |
 |---|---|
-| Width | 450pt |
-| Height | 600pt |
-| Corner radius | 22pt |
-| Fill | Same as collapsed |
-| Border | Same as collapsed |
+| Width | 450pt (default; user-resizable 300–900pt) |
+| Height | 600pt (default; user-resizable 300–900pt) |
+| Corner radius | 16pt |
+| Fill | Dark: `Color.black.opacity(0.96)` / Light: `Color(white: 0.965)` |
+| Border | Dark: `Color.white.opacity(0.12)` / Light: `Color.black.opacity(0.10)` |
 | Shadow | Enabled |
 | Panel hit-test | On (`ignoresMouseEvents = false`) |
 
 ### Animation
 | Property | Value |
 |---|---|
-| API | `.interpolatingSpring(stiffness: 280, damping: 22)` |
-| Triggered by | Global `NSEvent.mouseMoved` entering pill rect |
-| Collapse delay | 250ms debounce; re-check cursor position before collapsing |
+| Content fade | `.easeIn(duration: 0.12)` on expand; reverse on collapse |
+| Triggered by | Global `NSEvent.mouseMoved` entering pill hit-test rect |
+| Collapse delay | 300ms debounce; re-check cursor position before collapsing |
 | Key window | `panel.makeKey()` on expand; `panel.resignKey()` on collapse |
+| Note | NSPanel frame is the source of truth for size/position; SwiftUI fills the frame with `maxWidth/maxHeight: .infinity` |
 
 ---
 
@@ -198,14 +199,26 @@ SideNook.app (SPM executable)
 
 ---
 
-## 8. Out of Scope (v2)
+## 8. Shipped Beyond Original Scope (v1 additions)
 
-- Custom themes / color schemes
-- Font size configuration
-- Keyboard shortcut to expand (mouse-only)
-- Settings UI
+These items were originally deferred to v2 but were included in v1:
+
+| Feature | Where |
+|---|---|
+| Settings UI | `SettingsPopoverView.swift` — appearance, font size, dock position, shortcuts |
+| Font size configuration | `NookState.zoomIn/zoomOut`, `⌘+` / `⌘−` / `⌘0` keyboard shortcuts |
+| Keyboard shortcuts | `AppDelegate` local key monitor — `⌘T/W/[/]/1–9/K/+/−/0` |
+| Light mode | `NookState.Appearance`, per-session ANSI palettes |
+| Input highlight overlay | `InputHighlightOverlay` — baby-blue band on submitted-command rows |
+| About panel | `AboutView.swift` |
+
+## 9. Out of Scope (v2)
+
+- Custom themes / color schemes beyond light/dark toggle
+- Keyboard shortcut to expand (mouse-only in v1)
 - Tab reordering (drag-to-reorder)
 - Split terminal panes
+- Profiles / saved sessions
 
 ---
 

@@ -16,11 +16,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var monitor: Any?
     private var moveObserver: NSObjectProtocol?
     private var keyMonitor: Any?
+    private var statusItem: NSStatusItem?
     /// Guards against circular updates: setFrame → didMove → applyStateChange → setFrame
     private var isUpdatingFrame = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard NSScreen.main != nil else { return }
+        setupStatusItem()
 
         let pillSize = pillDimensions(for: state.dockedEdge)
         panel = SideNookPanel(
@@ -129,6 +131,48 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         startObservingState()
+    }
+
+    // MARK: - Status Bar Item
+
+    private func setupStatusItem() {
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = item.button {
+            button.image = NSImage(
+                systemSymbolName: "sidebar.left",
+                accessibilityDescription: "SideNook"
+            )
+            button.imagePosition = .imageOnly
+            button.toolTip = "SideNook"
+        }
+
+        let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Show/Hide SideNook", action: #selector(togglePanel), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Pin/Unpin SideNook", action: #selector(togglePinFromMenu), keyEquivalent: ""))
+        menu.addItem(.separator())
+        menu.addItem(NSMenuItem(title: "Quit SideNook", action: #selector(quitApp), keyEquivalent: "q"))
+        item.menu = menu
+
+        statusItem = item
+    }
+
+    @objc private func togglePanel() {
+        if state.isExpanded {
+            collapse()
+        } else {
+            expand()
+        }
+    }
+
+    @objc private func togglePinFromMenu() {
+        state.togglePin()
+        if state.isPinned && !state.isExpanded {
+            expand()
+        }
+    }
+
+    @objc private func quitApp() {
+        NSApplication.shared.terminate(nil)
     }
 
     // MARK: - State Observation

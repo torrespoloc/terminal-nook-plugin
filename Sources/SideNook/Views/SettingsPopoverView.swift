@@ -5,25 +5,21 @@ struct SettingsPopoverView: View {
     @Bindable var state: NookState
 
     private var bg: Color {
-        state.isDark ? NookTheme.navy : Color(white: 0.97)
+        state.isDark ? NookTheme.darkL3 : Color(white: 0.97)
     }
     private var cardBg: Color {
-        state.isDark ? Color.white.opacity(0.05) : Color.white.opacity(0.70)
+        // rgba(0,0,0,0.15) over L3 per spec — darkens group rows inside the popover
+        state.isDark ? Color.black.opacity(0.15) : Color.white.opacity(0.70)
     }
     private var cardStroke: Color {
-        state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
+        state.isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)
     }
-    private var fg: Color {
-        state.isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
-    }
-    private var fgMuted: Color {
-        state.isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45)
-    }
-    private var dividerColor: Color {
-        state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
-    }
+    private var t: NookTheme { state.theme }
+    private var fg: Color { t.fg }
+    private var fgMuted: Color { t.fgMute }
+    private var dividerColor: Color { t.stroke1 }
     private var segmentActiveBg: Color {
-        state.isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
+        state.isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.08)
     }
 
     @State private var showShortcuts = false
@@ -99,7 +95,7 @@ struct SettingsPopoverView: View {
                                     .frame(width: 24, height: 24)
                                     .background(
                                         RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                            .fill(state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
+                                            .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
                                     )
                             }
                             .buttonStyle(.plain)
@@ -114,7 +110,7 @@ struct SettingsPopoverView: View {
                                     .frame(width: 24, height: 24)
                                     .background(
                                         RoundedRectangle(cornerRadius: 5, style: .continuous)
-                                            .fill(state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.05))
+                                            .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
                                     )
                             }
                             .buttonStyle(.plain)
@@ -216,11 +212,11 @@ struct SettingsPopoverView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "power")
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(Color.red.opacity(0.70))
+                                .foregroundStyle(t.danger)
                                 .frame(width: 18)
                             Text("Quit SideNook")
                                 .font(.system(size: 14))
-                                .foregroundStyle(Color.red.opacity(0.80))
+                                .foregroundStyle(t.danger)
                             Spacer()
                         }
                         .padding(.horizontal, 12)
@@ -233,6 +229,7 @@ struct SettingsPopoverView: View {
             .padding(10)
         }
         .frame(width: 270)
+        .frame(maxHeight: 520)
         .background(bg)
         .popover(
             isPresented: Binding(get: { state.showAbout }, set: { state.showAbout = $0 }),

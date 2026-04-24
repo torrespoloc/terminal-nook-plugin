@@ -5,13 +5,13 @@ struct SideNookView: View {
     @Bindable var state: NookState
 
     // Pill is always dark regardless of mode
-    private static let pillFill = NookTheme.navy
+    private static let pillFill = NookTheme.darkL1
     private static let pillBorder = Color.white.opacity(0.12)
 
     // Appearance-adaptive colors (expanded only)
     private var fillColor: Color {
         state.isExpanded
-            ? (state.isDark ? NookTheme.navy : Color(white: 0.965))
+            ? (state.isDark ? NookTheme.darkL1 : Color(white: 0.965))
             : Self.pillFill
     }
     private var borderColor: Color {
@@ -105,17 +105,15 @@ struct SideNookView: View {
     private func pillStatusDot(color: Color) -> some View {
         let isVertical = state.dockedEdge == .left || state.dockedEdge == .right
         if isVertical {
-            VStack {
-                Circle().fill(color).frame(width: 4, height: 4)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .padding(.bottom, 10)
+            // Pill is tall — status dot sits at the bottom, horizontally centered
+            Circle().fill(color).frame(width: 5, height: 5)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                .padding(.bottom, 9)
         } else {
-            HStack {
-                Circle().fill(color).frame(width: 4, height: 4)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
-            .padding(.trailing, 10)
+            // Pill is wide — status dot sits at the trailing end, vertically centered
+            Circle().fill(color).frame(width: 5, height: 5)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+                .padding(.trailing, 9)
         }
     }
 

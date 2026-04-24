@@ -6,14 +6,11 @@ struct AboutView: View {
     let onDismiss: () -> Void
 
     private var bg: Color {
-        isDark ? NookTheme.navy : Color(white: 0.96)
+        isDark ? NookTheme.darkL3 : Color(white: 0.96)
     }
-    private var fg: Color {
-        isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
-    }
-    private var fgMuted: Color {
-        isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45)
-    }
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+    private var fg: Color { t.fg }
+    private var fgMuted: Color { t.fgMute }
     private var dividerColor: Color {
         isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
     }
@@ -142,9 +139,9 @@ struct AboutView: View {
             Text("SideNook is free and open source software.")
                 .font(.system(size: 12))
                 .foregroundStyle(fgMuted)
+                .multilineTextAlignment(.center)
                 .padding(.vertical, 14)
-
-            Spacer()
+                .padding(.bottom, 4)
         }
         .frame(width: 300)
         .background(bg)

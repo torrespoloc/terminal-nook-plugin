@@ -4,34 +4,31 @@ import SwiftUI
 struct SidebarNavView: View {
     @Bindable var state: NookState
 
-    private var bg: Color {
-        state.isDark ? Color.white.opacity(0.04) : Color.black.opacity(0.02)
-    }
-    private var dividerColor: Color {
-        state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
-    }
-    private var gripDot: Color {
-        state.isDark ? Color.white.opacity(0.16) : Color.black.opacity(0.14)
-    }
-    private var fgMuted: Color {
-        state.isDark ? Color.white.opacity(0.40) : Color.black.opacity(0.40)
-    }
-    private var fgActive: Color {
-        state.isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
-    }
+    private var t: NookTheme { state.theme }
 
     var body: some View {
         VStack(spacing: 0) {
-            // Drag grip
-            dragGrip
-                .frame(height: 40)
-                .frame(maxWidth: .infinity)
-                .background(DragHandleView())
-                .background(bg)
+            // ── Drag grip row (with layout toggle) ────
+            HStack {
+                dragGrip
+                Spacer()
+                Button(action: { state.tabLayout = .topBar }) {
+                    Image(systemName: "rectangle.topthird.inset.filled")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(t.fgMute)
+                        .frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain)
+                .help("Switch to Top-bar Layout")
+                .padding(.trailing, 4)
+            }
+            .frame(height: 40)
+            .frame(maxWidth: .infinity)
+            .background(DragHandleView())
 
-            Rectangle().fill(dividerColor).frame(height: 0.5)
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
 
-            // Tab list
+            // ── Tab list ──────────────────────────────
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 2) {
                     ForEach(state.sessions) { session in
@@ -50,9 +47,9 @@ struct SidebarNavView: View {
 
             Spacer(minLength: 0)
 
-            Rectangle().fill(dividerColor).frame(height: 0.5)
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
 
-            // Action buttons
+            // ── Action buttons ────────────────────────
             VStack(spacing: 0) {
                 sidebarButton(icon: "plus") {
                     if state.sessions.count < NookState.maxTabs { state.createSession() }
@@ -83,25 +80,46 @@ struct SidebarNavView: View {
             .padding(.bottom, 8)
         }
         .frame(width: 128)
-        .background(bg)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(t.L2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(t.stroke2, lineWidth: 0.5)
+                )
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [t.innerHighlight, .clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 0.5
+                        )
+                        .allowsHitTesting(false)
+                }
+                .shadow(color: .black.opacity(0.30), radius: 2, y: 1)
+        )
     }
 
     private var dragGrip: some View {
         VStack(spacing: 3) {
             ForEach(0..<3, id: \.self) { _ in
                 HStack(spacing: 3) {
-                    Circle().fill(gripDot).frame(width: 3, height: 3)
-                    Circle().fill(gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
                 }
             }
         }
+        .padding(.leading, 10)
     }
 
     private func sidebarButton(icon: String, isOn: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isOn ? fgActive : fgMuted)
+                .foregroundStyle(isOn ? t.fg : t.fgMute)
                 .frame(width: 34, height: 34)
                 .contentShape(Rectangle())
         }
@@ -119,33 +137,61 @@ private struct SidebarTabRow: View {
     let onClose: () -> Void
 
     @State private var isHovered = false
+    @State private var attnOpacity: Double = 1.0
+
+    private var t: NookTheme { NookTheme(isDark: isDark) }
 
     private var fgColor: Color {
         if isActive  { return isDark ? Color.white.opacity(0.90) : Color.black.opacity(0.85) }
         if isHovered { return isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.65) }
         return isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.42)
     }
+
     private var tabBg: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.06) }
-        if isHovered { return isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.03) }
+        if isActive  { return isDark ? Color.white.opacity(0.095) : Color.white.opacity(0.95) }
+        if isHovered { return isDark ? Color.white.opacity(0.035) : Color.black.opacity(0.025) }
         return Color.clear
     }
+
     private var accentBar: Color {
         isDark ? Color.white.opacity(0.55) : Color.black.opacity(0.30)
+    }
+
+    private var dotColor: Color {
+        switch session.status {
+        case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)
+        case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)
+        case .dead: return .red.opacity(0.5)
+        }
     }
 
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 5) {
-                // Active accent bar
                 RoundedRectangle(cornerRadius: 1, style: .continuous)
                     .fill(isActive ? accentBar : Color.clear)
                     .frame(width: 2, height: 14)
 
-                // Status dot
                 Circle()
-                    .fill(session.isAlive ? Color.green.opacity(0.55) : Color.red.opacity(0.45))
+                    .fill(dotColor)
                     .frame(width: 5, height: 5)
+                    .opacity(session.status == .attn ? attnOpacity : 1)
+                    .onAppear {
+                        if session.status == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
+                            }
+                        }
+                    }
+                    .onChange(of: session.status) { _, newStatus in
+                        if newStatus == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
+                            }
+                        } else {
+                            withAnimation { attnOpacity = 1 }
+                        }
+                    }
 
                 Text(session.title)
                     .font(.system(size: 13, weight: isActive ? .medium : .regular))

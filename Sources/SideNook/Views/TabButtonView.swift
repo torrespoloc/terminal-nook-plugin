@@ -9,6 +9,7 @@ struct TabButtonView: View {
     let onClose: () -> Void
 
     @State private var isHovered = false
+    @State private var attnOpacity: Double = 1.0
 
     // MARK: - Palette
 
@@ -19,30 +20,60 @@ struct TabButtonView: View {
     }
 
     private var tabBg: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.06) }
-        if isHovered { return isDark ? Color.white.opacity(0.05) : Color.black.opacity(0.03) }
+        if isActive  { return isDark ? Color.white.opacity(0.095) : Color.white.opacity(0.95) }
+        if isHovered { return isDark ? Color.white.opacity(0.035) : Color.black.opacity(0.025) }
         return Color.clear
     }
 
-    private var accentLine: Color {
-        isDark ? Color.white.opacity(0.30) : Color.black.opacity(0.22)
+    private var tabBorder: Color {
+        isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.12)
+    }
+
+    private var innerHighlight: Color {
+        isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.90)
     }
 
     private var closeFg: Color {
         isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45)
     }
+
     private var closeHoverBg: Color {
         isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
+    }
+
+    private var dotColor: Color {
+        switch session.status {
+        case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)  // #35d07f
+        case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)  // #f0b429
+        case .dead: return .red.opacity(0.5)
+        }
     }
 
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 6) {
+                // Status dot
                 Circle()
-                    .fill(session.isAlive
-                        ? (session.isExternal ? Color.blue.opacity(0.6) : Color.green.opacity(0.5))
-                        : Color.red.opacity(0.4))
-                    .frame(width: 5, height: 5)
+                    .fill(dotColor)
+                    .frame(width: 6, height: 6)
+                    .shadow(color: dotColor.opacity(0.5), radius: 2)
+                    .opacity(session.status == .attn ? attnOpacity : 1)
+                    .onAppear {
+                        if session.status == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
+                            }
+                        }
+                    }
+                    .onChange(of: session.status) { _, newStatus in
+                        if newStatus == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
+                            }
+                        } else {
+                            withAnimation { attnOpacity = 1 }
+                        }
+                    }
 
                 Text(session.title)
                     .font(.system(size: 13, weight: isActive ? .semibold : .regular))
@@ -71,15 +102,30 @@ struct TabButtonView: View {
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(tabBg)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(isActive ? tabBorder : .clear, lineWidth: 0.5)
+                    )
+                    .shadow(
+                        color: isActive ? .black.opacity(0.35) : .clear,
+                        radius: isActive ? 2 : 0,
+                        y: isActive ? 1 : 0
+                    )
+                    .overlay(alignment: .top) {
+                        if isActive {
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [innerHighlight, .clear],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    ),
+                                    lineWidth: 0.5
+                                )
+                                .allowsHitTesting(false)
+                        }
+                    }
             )
-            .overlay(alignment: .bottom) {
-                if isActive {
-                    Capsule()
-                        .fill(accentLine)
-                        .frame(width: 20, height: 2)
-                        .offset(y: 1)
-                }
-            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

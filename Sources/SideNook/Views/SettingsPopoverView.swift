@@ -212,9 +212,8 @@ struct SettingsPopoverView: View {
 
             sectionDivider
 
-            // About
+            // About — opens as sibling popover to the left
             settingsRow(icon: "info.circle", label: "About SideNook") {
-                state.showSettings = false
                 state.showAbout = true
             }
 
@@ -240,6 +239,12 @@ struct SettingsPopoverView: View {
         }
         .frame(width: 260)
         .background(bg)
+        .popover(
+            isPresented: Binding(get: { state.showAbout }, set: { state.showAbout = $0 }),
+            arrowEdge: .leading
+        ) {
+            AboutView(isDark: state.isDark) { state.showAbout = false }
+        }
     }
 
     // MARK: - Helpers

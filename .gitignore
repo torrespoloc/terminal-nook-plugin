@@ -16,3 +16,8 @@
 
 # Debug-only files (never publish)
 Sources/SideNook/DebugLogger.swift
+
+# Local-only project folders
+_media/
+_archive/
+_metadata/

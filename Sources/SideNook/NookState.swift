@@ -42,8 +42,15 @@ final class NookState {
     var activeSessionID: UUID?
     private var sessionCounter: Int = 0
 
+    enum SessionStatus {
+        case live   // shell running normally
+        case attn   // waiting for user input (sudo, confirmation)
+        case dead   // process exited
+    }
+
     var isVerticalEdge: Bool { dockedEdge == .left || dockedEdge == .right }
     var isDark: Bool { appearance == .dark }
+    var theme: NookTheme { NookTheme(isDark: isDark) }
 
     /// Launch at Login via SMAppService. Requires app to be installed (not run from swift build).
     var launchAtLogin: Bool {

@@ -21,7 +21,7 @@ struct SideNookView: View {
     }
 
     private var outerRadius: CGFloat {
-        state.isExpanded ? 16 : 60
+        state.isExpanded ? 14 : 60
     }
 
     var body: some View {
@@ -33,27 +33,40 @@ struct SideNookView: View {
                     RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: 0.5)
                 )
+                .overlay(alignment: .top) {
+                    // Top inner highlight — simulates glass edge
+                    RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [state.theme.innerHighlight, .clear],
+                                startPoint: .top, endPoint: .center
+                            ),
+                            lineWidth: 0.5
+                        )
+                        .allowsHitTesting(false)
+                }
                 .shadow(
-                    color: state.isExpanded
-                        ? Color.black.opacity(state.isDark ? 0.5 : 0.15)
-                        : Color.clear,
-                    radius: state.isExpanded ? 20 : 0,
-                    y: state.isExpanded ? 4 : 0
+                    color: Color.black.opacity(state.isDark ? 0.55 : 0.18),
+                    radius: state.isExpanded ? 40 : 0,
+                    y: state.isExpanded ? 12 : 0
+                )
+                .shadow(
+                    color: Color.black.opacity(state.isDark ? 0.35 : 0.10),
+                    radius: state.isExpanded ? 10 : 0,
+                    y: state.isExpanded ? 2 : 0
                 )
 
             // Expanded content
             if state.isExpanded, let session = state.activeSession {
-                let dividerColor = state.isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
                 ZStack {
                     if state.tabLayout == .leftSidebar {
-                        HStack(spacing: 0) {
+                        HStack(spacing: 8) {
                             SidebarNavView(state: state)
-                            Rectangle().fill(dividerColor).frame(width: 0.5)
+                                .padding(.leading, 8)
+                                .padding(.vertical, 8)
                             TerminalContainerView(session: session, isDark: state.isDark)
-                                .padding(.top, 8)
                                 .padding(.trailing, 8)
-                                .padding(.bottom, 8)
-                                .padding(.leading, 4)
+                                .padding(.vertical, 8)
                         }
                     } else {
                         VStack(spacing: 0) {
@@ -63,23 +76,9 @@ struct SideNookView: View {
                                 .padding(.bottom, 8)
                         }
                     }
-
-                    // About overlay
-                    if state.showAbout {
-                        Color.black.opacity(0.4)
-                            .onTapGesture { state.showAbout = false }
-
-                        AboutView(isDark: state.isDark) {
-                            state.showAbout = false
-                        }
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .shadow(color: Color.black.opacity(0.3), radius: 16, y: 4)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                    }
                 }
                 .clipShape(RoundedRectangle(cornerRadius: outerRadius, style: .continuous))
                 .transition(.opacity.animation(.easeIn(duration: 0.12)))
-                .animation(.easeOut(duration: 0.2), value: state.showAbout)
 
                 resizeHandles
             }

@@ -4,112 +4,129 @@ import SwiftUI
 struct NavBarView: View {
     @Bindable var state: NookState
 
-    // MARK: - Palette
-
-    private var surfaceBg: Color {
-        state.isDark
-            ? Color.white.opacity(0.05)
-            : Color.black.opacity(0.04)
-    }
-    private var dividerColor: Color {
-        state.isDark
-            ? Color.white.opacity(0.08)
-            : Color.black.opacity(0.07)
-    }
-    private var fgMuted: Color {
-        state.isDark ? Color.white.opacity(0.40) : Color.black.opacity(0.40)
-    }
-    private var fgActive: Color {
-        state.isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
-    }
-    private var gripDot: Color {
-        state.isDark ? Color.white.opacity(0.15) : Color.black.opacity(0.15)
-    }
-    private var titleColor: Color {
-        state.isDark ? Color.white.opacity(0.55) : Color.black.opacity(0.50)
-    }
+    private var t: NookTheme { state.theme }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                // ── Drag grip ──────────────────────────────
-                dragGrip
-                    .padding(.leading, 10)
-                    .padding(.trailing, 6)
+        HStack(spacing: 0) {
+            // ── Drag grip ──────────────────────────────
+            dragGrip
+                .padding(.leading, 10)
+                .padding(.trailing, 6)
 
-                // ── Thin divider ──────────────────────────
-                verticalDivider
-
-                // ── Tabs ─────────────────────────────────
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 4) {
-                        ForEach(state.sessions) { session in
-                            TabButtonView(
-                                session: session,
-                                isActive: session.id == state.activeSessionID,
-                                isDark: state.isDark,
-                                onSelect: { state.switchToSession(session.id) },
-                                onClose: { state.closeSession(session.id) }
-                            )
-                        }
-                    }
-                    .padding(.horizontal, 6)
-                }
-                .frame(maxWidth: .infinity)
-
-                // ── Thin divider ──────────────────────────
-                verticalDivider
-
-                // ── Action buttons ───────────────────────
-                HStack(spacing: 2) {
-                    navButton(icon: "plus", isOn: false) {
-                        if state.sessions.count < NookState.maxTabs {
-                            state.createSession()
-                        }
-                    }
-                    .help("New Tab")
-                    navButton(
-                        icon: state.isDark ? "sun.max.fill" : "moon.fill",
-                        isOn: false
-                    ) {
-                        state.toggleAppearance()
-                    }
-                    .help(state.isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
-                    navButton(
-                        icon: state.isPinned ? "pin.fill" : "pin.slash",
-                        isOn: state.isPinned
-                    ) {
-                        state.togglePin()
-                    }
-                    .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
-                    navButton(
-                        icon: "gearshape",
-                        isOn: state.showSettings
-                    ) {
-                        state.showSettings.toggle()
-                    }
-                    .help("Settings")
-                    .popover(
-                        isPresented: Binding(
-                            get: { state.showSettings },
-                            set: { state.showSettings = $0 }
-                        ),
-                        arrowEdge: .bottom
-                    ) {
-                        SettingsPopoverView(state: state)
-                    }
-                }
-                .padding(.horizontal, 8)
+            // ── Layout toggle (moves panel to sidebar) ─
+            NavIconButton(
+                icon: "sidebar.left",
+                isOn: false,
+                fgMuted: t.fgMute,
+                fgActive: t.fg,
+                isDark: state.isDark
+            ) {
+                state.tabLayout = .leftSidebar
             }
-            .frame(height: 40)
-            .background(DragHandleView())
-            .background(surfaceBg)
+            .help("Switch to Sidebar Layout")
 
-            // Bottom edge line separating nav from terminal
-            Rectangle()
-                .fill(dividerColor)
-                .frame(height: 0.5)
+            // ── Thin divider ──────────────────────────
+            verticalDivider
+
+            // ── Tabs ─────────────────────────────────
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 4) {
+                    ForEach(state.sessions) { session in
+                        TabButtonView(
+                            session: session,
+                            isActive: session.id == state.activeSessionID,
+                            isDark: state.isDark,
+                            onSelect: { state.switchToSession(session.id) },
+                            onClose: { state.closeSession(session.id) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 6)
+            }
+            .frame(maxWidth: .infinity)
+
+            // ── Thin divider ──────────────────────────
+            verticalDivider
+
+            // ── Action buttons ───────────────────────
+            HStack(spacing: 2) {
+                NavIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
+                    if state.sessions.count < NookState.maxTabs {
+                        state.createSession()
+                    }
+                }
+                .help("New Tab")
+
+                NavIconButton(
+                    icon: state.isDark ? "sun.max.fill" : "moon.fill",
+                    isOn: false,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.toggleAppearance()
+                }
+                .help(state.isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
+
+                NavIconButton(
+                    icon: state.isPinned ? "pin.fill" : "pin.slash",
+                    isOn: state.isPinned,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.togglePin()
+                }
+                .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
+
+                NavIconButton(
+                    icon: "gearshape",
+                    isOn: state.showSettings,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.showSettings.toggle()
+                }
+                .help("Settings")
+                .popover(
+                    isPresented: Binding(
+                        get: { state.showSettings },
+                        set: { state.showSettings = $0 }
+                    ),
+                    arrowEdge: .bottom
+                ) {
+                    SettingsPopoverView(state: state)
+                }
+            }
+            .padding(.horizontal, 8)
         }
+        .frame(height: 40)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(t.L2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(t.stroke2, lineWidth: 0.5)
+                )
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [t.innerHighlight, .clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 0.5
+                        )
+                        .allowsHitTesting(false)
+                }
+                .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+        )
+        .background(DragHandleView())
+        .padding(.horizontal, 8)
+        .padding(.top, 8)
+        .padding(.bottom, 6)
     }
 
     // MARK: - Components
@@ -118,8 +135,8 @@ struct NavBarView: View {
         VStack(spacing: 3) {
             ForEach(0..<3, id: \.self) { _ in
                 HStack(spacing: 3) {
-                    Circle().fill(gripDot).frame(width: 3, height: 3)
-                    Circle().fill(gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
                 }
             }
         }
@@ -129,19 +146,8 @@ struct NavBarView: View {
 
     private var verticalDivider: some View {
         Rectangle()
-            .fill(dividerColor)
+            .fill(t.stroke1)
             .frame(width: 0.5, height: 28)
-    }
-
-    private func navButton(icon: String, isOn: Bool, action: @escaping () -> Void) -> some View {
-        NavIconButton(
-            icon: icon,
-            isOn: isOn,
-            fgMuted: fgMuted,
-            fgActive: fgActive,
-            isDark: state.isDark,
-            action: action
-        )
     }
 }
 

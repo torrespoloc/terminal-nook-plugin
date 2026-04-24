@@ -18,6 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var keyMonitor: Any?
     private var globalHotkeyMonitor: Any?
     private var statusItem: NSStatusItem?
+    private var keyObservers: [NSObjectProtocol] = []
     /// Guards against circular updates: setFrame → didMove → applyStateChange → setFrame
     private var isUpdatingFrame = false
 
@@ -118,6 +119,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.terminalView.feed(text: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
                 }
                 return nil
+            case "v":
+                if let session = self.state.activeSession {
+                    session.terminalView.paste(session.terminalView)
+                }
+                return nil
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 if let num = Int(chars) {
                     let index = num - 1
@@ -144,6 +150,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         startObservingState()
+        startObservingWindowFocus()
     }
 
     // MARK: - Status Bar Item
@@ -186,6 +193,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func quitApp() {
         NSApplication.shared.terminate(nil)
+    }
+
+    // MARK: - Window Focus → Cursor Blink
+
+    private func startObservingWindowFocus() {
+        let becomeKey = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, let session = self.state.activeSession else { return }
+                self.panel.makeFirstResponder(session.terminalView)
+            }
+        }
+
+        let resignKey = NotificationCenter.default.addObserver(
+            forName: NSWindow.didResignKeyNotification,
+            object: panel,
+            queue: .main
+        ) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                // Yield first responder so SwiftTerm calls resignFirstResponder
+                // → caretViewTracksFocus draws hollow cursor, stops blink.
+                self.panel.makeFirstResponder(self.panel.contentView)
+            }
+        }
+
+        keyObservers = [becomeKey, resignKey]
     }
 
     // MARK: - State Observation
@@ -392,6 +429,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let moveObserver { NotificationCenter.default.removeObserver(moveObserver) }
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         if let globalHotkeyMonitor { NSEvent.removeMonitor(globalHotkeyMonitor) }
+        for obs in keyObservers { NotificationCenter.default.removeObserver(obs) }
         for session in state.sessions { session.terminate() }
     }
 }

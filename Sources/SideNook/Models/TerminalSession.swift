@@ -9,6 +9,7 @@ final class TerminalSession: Identifiable {
     let id = UUID()
     var title: String
     var isAlive: Bool = true
+    var status: NookState.SessionStatus = .live
     let screenName: String
     let isExternal: Bool = false
 
@@ -71,6 +72,8 @@ final class TerminalSession: Identifiable {
         let font = NSFont(name: "SF Mono", size: fontSize)
             ?? NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
         terminalView.font = font
+        // Show hollow caret when the panel loses focus, matching Terminal.app behavior.
+        terminalView.caretViewTracksFocus = true
         applyAppearance(appearance)
     }
 
@@ -115,6 +118,7 @@ final class TerminalSession: Identifiable {
 
     func terminate() {
         isAlive = false
+        status = .dead
     }
 }
 
@@ -148,6 +152,7 @@ final class SessionCoordinator: @unchecked Sendable, LocalProcessTerminalViewDel
     nonisolated func processTerminated(source: SwiftTerm.TerminalView, exitCode: Int32?) {
         Task { @MainActor [weak self] in
             self?.session?.isAlive = false
+            self?.session?.status = .dead
         }
     }
 }

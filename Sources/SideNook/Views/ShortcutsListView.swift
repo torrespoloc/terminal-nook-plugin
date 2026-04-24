@@ -25,6 +25,8 @@ struct ShortcutsListView: View {
         ("\u{2318}+",           "Zoom In"),
         ("\u{2318}\u{2212}",    "Zoom Out"),
         ("\u{2318}0",           "Reset Zoom"),
+        ("\u{2318}C",           "Copy selection"),
+        ("\u{2318}V",           "Paste"),
     ]
 
     var body: some View {
@@ -49,6 +51,14 @@ struct ShortcutsListView: View {
                     Spacer()
                 }
             }
+
+            Divider()
+                .padding(.vertical, 2)
+
+            Text("System text shortcuts also apply — three-finger drag, double-tap select, and any custom Accessibility Pointer shortcuts you've configured in System Settings.")
+                .font(.system(size: 11))
+                .foregroundStyle(fgMuted.opacity(0.7))
+                .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
     }

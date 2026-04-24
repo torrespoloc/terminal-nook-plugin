@@ -4,8 +4,10 @@ import SwiftUI
 struct NookTheme {
     let isDark: Bool
 
+    static let navy = Color(red: 0.102, green: 0.114, blue: 0.18)
+
     // ── Elevation layers (L0 = base, L3 = highest) ───────────
-    var L0: Color { isDark ? .black.opacity(0.96)          : Color(white: 0.965) }
+    var L0: Color { isDark ? Self.navy                      : Color(white: 0.965) }
     var L1: Color { isDark ? .white.opacity(0.035)         : .black.opacity(0.025) }
     var L2: Color { isDark ? .white.opacity(0.06)          : .white.opacity(0.62) }
     var L3: Color { isDark ? .white.opacity(0.095)         : .white.opacity(0.95) }

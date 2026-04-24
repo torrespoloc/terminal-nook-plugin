@@ -6,7 +6,7 @@ struct AboutView: View {
     let onDismiss: () -> Void
 
     private var bg: Color {
-        isDark ? Color(white: 0.12) : Color(white: 0.96)
+        isDark ? NookTheme.navy : Color(white: 0.96)
     }
     private var fg: Color {
         isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
@@ -62,6 +62,8 @@ struct AboutView: View {
                     .font(.system(size: 13))
                     .foregroundStyle(fgMuted)
                     .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, 16)
 
                 Text("Version 1.0.0")
                     .font(.system(size: 12, weight: .medium, design: .monospaced))
@@ -144,7 +146,7 @@ struct AboutView: View {
 
             Spacer()
         }
-        .frame(width: 280, height: 420)
+        .frame(width: 300)
         .background(bg)
     }
 }

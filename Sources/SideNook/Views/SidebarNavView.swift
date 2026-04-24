@@ -28,29 +28,8 @@ struct SidebarNavView: View {
 
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 
-            // ── Tab list ──────────────────────────────
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
-                    ForEach(state.sessions) { session in
-                        SidebarTabRow(
-                            session: session,
-                            isActive: session.id == state.activeSessionID,
-                            isDark: state.isDark,
-                            onSelect: { state.switchToSession(session.id) },
-                            onClose: { state.closeSession(session.id) }
-                        )
-                    }
-                }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 6)
-            }
-
-            Spacer(minLength: 0)
-
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            // ── Action buttons ────────────────────────
-            VStack(spacing: 0) {
+            // ── Action buttons (horizontal row near top) ──
+            HStack(spacing: 0) {
                 sidebarButton(icon: "plus") {
                     if state.sessions.count < NookState.maxTabs { state.createSession() }
                 }
@@ -77,7 +56,28 @@ struct SidebarNavView: View {
                     SettingsPopoverView(state: state)
                 }
             }
-            .padding(.bottom, 8)
+            .frame(height: 40)
+
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
+
+            // ── Tab list ──────────────────────────────
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 2) {
+                    ForEach(state.sessions) { session in
+                        SidebarTabRow(
+                            session: session,
+                            isActive: session.id == state.activeSessionID,
+                            isDark: state.isDark,
+                            onSelect: { state.switchToSession(session.id) },
+                            onClose: { state.closeSession(session.id) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 6)
+                .padding(.vertical, 6)
+            }
+
+            Spacer(minLength: 0)
         }
         .frame(width: 128)
         .background(

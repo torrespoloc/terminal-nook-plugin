@@ -5,13 +5,13 @@ struct SideNookView: View {
     @Bindable var state: NookState
 
     // Pill is always dark regardless of mode
-    private static let pillFill = Color.black.opacity(0.96)
+    private static let pillFill = NookTheme.navy
     private static let pillBorder = Color.white.opacity(0.12)
 
     // Appearance-adaptive colors (expanded only)
     private var fillColor: Color {
         state.isExpanded
-            ? (state.isDark ? Color.black.opacity(0.96) : Color(white: 0.965))
+            ? (state.isDark ? NookTheme.navy : Color(white: 0.965))
             : Self.pillFill
     }
     private var borderColor: Color {
@@ -24,6 +24,14 @@ struct SideNookView: View {
         state.isExpanded ? 14 : 60
     }
 
+    private var pillStatusColor: Color? {
+        guard !state.isExpanded else { return nil }
+        let statuses = state.sessions.map(\.status)
+        if statuses.contains(.attn) { return state.theme.dotAttn }
+        if statuses.contains(.live) { return state.theme.dotLive }
+        return nil
+    }
+
     var body: some View {
         ZStack {
             // Background shell — always present
@@ -33,6 +41,11 @@ struct SideNookView: View {
                     RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
                         .strokeBorder(borderColor, lineWidth: 0.5)
                 )
+                .overlay {
+                    if let dotColor = pillStatusColor {
+                        pillStatusDot(color: dotColor)
+                    }
+                }
                 .overlay(alignment: .top) {
                     // Top inner highlight — simulates glass edge
                     RoundedRectangle(cornerRadius: outerRadius, style: .continuous)
@@ -86,6 +99,24 @@ struct SideNookView: View {
         // Fill the NSPanel — no explicit frame sizing, no spring animation.
         // The NSPanel frame is the single source of truth for dimensions.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func pillStatusDot(color: Color) -> some View {
+        let isVertical = state.dockedEdge == .left || state.dockedEdge == .right
+        if isVertical {
+            VStack {
+                Circle().fill(color).frame(width: 4, height: 4)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+            .padding(.bottom, 10)
+        } else {
+            HStack {
+                Circle().fill(color).frame(width: 4, height: 4)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .trailing)
+            .padding(.trailing, 10)
+        }
     }
 
     @ViewBuilder

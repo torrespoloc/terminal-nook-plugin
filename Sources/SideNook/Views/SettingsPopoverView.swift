@@ -68,10 +68,7 @@ struct SettingsPopoverView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
                         Spacer()
-                        Toggle("", isOn: Binding(get: { state.isPinned }, set: { state.isPinned = $0 }))
-                            .toggleStyle(.switch)
-                            .scaleEffect(0.75)
-                            .frame(width: 44)
+                        NookToggle(isOn: $state.isPinned, isDark: state.isDark)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -92,9 +89,9 @@ struct SettingsPopoverView: View {
                                 Image(systemName: "minus")
                                     .font(.system(size: 11, weight: .bold))
                                     .foregroundStyle(fgMuted)
-                                    .frame(width: 24, height: 24)
+                                    .frame(width: 20, height: 20)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
                                             .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
                                     )
                             }
@@ -107,9 +104,9 @@ struct SettingsPopoverView: View {
                                 Image(systemName: "plus")
                                     .font(.system(size: 11, weight: .bold))
                                     .foregroundStyle(fgMuted)
-                                    .frame(width: 24, height: 24)
+                                    .frame(width: 20, height: 20)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
                                             .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
                                     )
                             }
@@ -120,7 +117,7 @@ struct SettingsPopoverView: View {
                     .padding(.vertical, 10)
                 }
 
-                // ── Group 3: Dock Position + Launch at Login ──
+                // ── Group 3: Dock Position + Launch at Login + Reduce Motion ──
                 settingsCard {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
@@ -164,10 +161,23 @@ struct SettingsPopoverView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
                         Spacer()
-                        Toggle("", isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }))
-                            .toggleStyle(.switch)
-                            .scaleEffect(0.75)
-                            .frame(width: 44)
+                        NookToggle(isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }), isDark: state.isDark)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+
+                    sectionDivider
+
+                    HStack(spacing: 8) {
+                        Image(systemName: "hand.raised")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(fgMuted)
+                            .frame(width: 18)
+                        Text("Reduce Motion")
+                            .font(.system(size: 14))
+                            .foregroundStyle(fg)
+                        Spacer()
+                        NookToggle(isOn: $state.reduceMotion, isDark: state.isDark)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -186,7 +196,7 @@ struct SettingsPopoverView: View {
                                 .foregroundStyle(fg)
                             Spacer()
                             Image(systemName: showShortcuts ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(fgMuted)
                         }
                         .padding(.horizontal, 12)
@@ -202,7 +212,7 @@ struct SettingsPopoverView: View {
 
                     sectionDivider
 
-                    settingsRow(icon: "info.circle", label: "About SideNook") {
+                    settingsRow(icon: "info.circle", label: "About SideNook", showChevron: true) {
                         state.showAbout = true
                     }
 
@@ -218,6 +228,9 @@ struct SettingsPopoverView: View {
                                 .font(.system(size: 14))
                                 .foregroundStyle(t.danger)
                             Spacer()
+                            Text("⌘Q")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(t.fgMute)
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
@@ -228,7 +241,7 @@ struct SettingsPopoverView: View {
             }
             .padding(10)
         }
-        .frame(width: 270)
+        .frame(width: 260)
         .frame(maxHeight: 520)
         .background(bg)
         .popover(
@@ -262,7 +275,7 @@ struct SettingsPopoverView: View {
             .padding(.horizontal, 8)
     }
 
-    private func settingsRow(icon: String, label: String, action: @escaping () -> Void) -> some View {
+    private func settingsRow(icon: String, label: String, showChevron: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
@@ -273,6 +286,11 @@ struct SettingsPopoverView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(fg)
                 Spacer()
+                if showChevron {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(t.fgMute)
+                }
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)

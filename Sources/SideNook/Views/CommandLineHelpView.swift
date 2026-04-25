@@ -114,7 +114,7 @@ struct CommandLineHelpView: View {
             }
         }) {
             HStack(spacing: 6) {
-                Image(systemName: "questionmark.circle")
+                Image(systemName: "info.circle")
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(t.fgMid)
 
@@ -185,7 +185,7 @@ struct CommandLineHelpView: View {
 
     private func modeTab(label: String, mode: NookState.CommandHelpMode) -> some View {
         let isSelected = state.commandHelpMode == mode
-        return Button(action: { state.commandHelpMode = mode }) {
+        return Button(action: { state.commandHelpMode = mode; query = "" }) {
             Text(label)
                 .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
                 .foregroundStyle(isSelected ? t.fg : t.fgMute)

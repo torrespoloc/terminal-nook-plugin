@@ -79,9 +79,8 @@ struct SidebarNavView: View {
                 .padding(.vertical, 6)
             }
 
-            Spacer(minLength: 0)
-
             CommandLineHelpView(state: state)
+                .zIndex(1)
 
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 

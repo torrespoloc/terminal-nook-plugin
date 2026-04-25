@@ -38,21 +38,23 @@ struct SettingsPopoverView: View {
 
                 // ── Group 0: Accent Color ─────────────────────
                 settingsCard {
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(t.accent)
-                            .frame(width: 14, height: 14)
-                            .frame(width: 18, height: 18)
-                        Text("Accent Color")
-                            .font(.system(size: 14))
-                            .foregroundStyle(fg)
-                        Spacer()
-                        HStack(spacing: 4) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack(spacing: 8) {
+                            Circle()
+                                .fill(t.accent)
+                                .frame(width: 14, height: 14)
+                                .frame(width: 18, height: 18)
+                            Text("Accent Color")
+                                .font(.system(size: 14))
+                                .foregroundStyle(fg)
+                        }
+                        HStack(spacing: 6) {
                             ForEach(accentPresets, id: \.hex) { preset in
                                 accentSwatchButton(hex: preset.hex, name: preset.name)
                             }
                             customAccentSwatch
                         }
+                        .padding(.leading, 26)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -120,7 +122,7 @@ struct SettingsPopoverView: View {
                                     Text(edge.rawValue.capitalized)
                                         .font(.system(size: 12, weight: state.dockedEdge == edge ? .semibold : .regular))
                                         .foregroundStyle(state.dockedEdge == edge ? fg : fgMuted)
-                                        .padding(.horizontal, 9)
+                                        .frame(maxWidth: .infinity)
                                         .padding(.vertical, 5)
                                         .background(
                                             RoundedRectangle(cornerRadius: 5, style: .continuous)
@@ -321,14 +323,14 @@ struct SettingsPopoverView: View {
                 if isSelected {
                     Circle()
                         .strokeBorder(color, lineWidth: 1.5)
-                        .frame(width: 22, height: 22)
+                        .frame(width: 30, height: 30)
                     Circle()
                         .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 19, height: 19)
+                        .frame(width: 27, height: 27)
                 }
                 Circle()
                     .fill(color)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 24, height: 24)
                     .overlay(
                         Group {
                             if !isSelected {
@@ -337,7 +339,7 @@ struct SettingsPopoverView: View {
                         }
                     )
             }
-            .frame(width: 22, height: 22)
+            .frame(width: 30, height: 30)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Accent: \(name)")
@@ -352,28 +354,28 @@ struct SettingsPopoverView: View {
                 if isCustomAccent {
                     Circle()
                         .strokeBorder(currentColor, lineWidth: 1.5)
-                        .frame(width: 22, height: 22)
+                        .frame(width: 30, height: 30)
                     Circle()
                         .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 19, height: 19)
+                        .frame(width: 27, height: 27)
                 }
                 Circle()
                     .fill(currentColor)
-                    .frame(width: 14, height: 14)
+                    .frame(width: 24, height: 24)
                     .overlay(
                         Circle()
                             .strokeBorder(t.fgMute, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
                     )
             }
-            .frame(width: 22, height: 22)
+            .frame(width: 30, height: 30)
             .allowsHitTesting(false)
 
             // Transparent NSColorWell — provides click-to-open-color-panel
             TransparentColorWell(color: accentBinding)
-                .frame(width: 22, height: 22)
+                .frame(width: 30, height: 30)
                 .opacity(0)
         }
-        .frame(width: 22, height: 22)
+        .frame(width: 30, height: 30)
         .accessibilityLabel("Accent: Custom color")
         .accessibilityAddTraits(isCustomAccent ? .isSelected : [])
     }

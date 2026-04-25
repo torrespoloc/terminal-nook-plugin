@@ -42,9 +42,13 @@ final class NookState {
         }
     }
     var fontSize: CGFloat = 13
+    enum CommandHelpMode { case list, chat }
+
     var showSettings: Bool = false
     var showAbout: Bool = false
     var reduceMotion: Bool = false
+    var showCommandHelp: Bool = false
+    var commandHelpMode: CommandHelpMode = .list
 
     // Tab/session management
     var sessions: [TerminalSession] = []

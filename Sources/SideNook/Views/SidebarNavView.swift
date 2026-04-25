@@ -81,6 +81,8 @@ struct SidebarNavView: View {
 
             Spacer(minLength: 0)
 
+            CommandLineHelpView(state: state)
+
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 
             Text("SideNook v1.0")

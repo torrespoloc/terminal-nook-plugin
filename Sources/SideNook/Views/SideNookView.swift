@@ -5,19 +5,17 @@ struct SideNookView: View {
     @Bindable var state: NookState
 
     // Pill is always dark regardless of mode
-    private static let pillFill = NookTheme.darkL1
-    private static let pillBorder = Color.white.opacity(0.12)
+    private static let pillFill = Color(red: 0.039, green: 0.039, blue: 0.047, opacity: 0.94)
+    private static let pillBorder = Color.white.opacity(0.18)
+
+    private var t: NookTheme { state.theme }
 
     // Appearance-adaptive colors (expanded only)
     private var fillColor: Color {
-        state.isExpanded
-            ? (state.isDark ? NookTheme.darkL1 : Color(white: 0.965))
-            : Self.pillFill
+        state.isExpanded ? t.L0 : Self.pillFill
     }
     private var borderColor: Color {
-        state.isExpanded
-            ? (state.isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.10))
-            : Self.pillBorder
+        state.isExpanded ? t.stroke0 : Self.pillBorder
     }
 
     private var outerRadius: CGFloat {
@@ -59,21 +57,21 @@ struct SideNookView: View {
                         .allowsHitTesting(false)
                 }
                 .shadow(
-                    color: Color.black.opacity(state.isDark ? 0.55 : 0.18),
-                    radius: state.isExpanded ? 40 : 0,
-                    y: state.isExpanded ? 12 : 0
+                    color: Color.black.opacity(state.isExpanded ? (state.isDark ? 0.55 : 0.18) : 0.5),
+                    radius: state.isExpanded ? (state.isDark ? 25 : 20) : 7,
+                    y: state.isExpanded ? (state.isDark ? 18 : 14) : 4
                 )
                 .shadow(
-                    color: Color.black.opacity(state.isDark ? 0.35 : 0.10),
-                    radius: state.isExpanded ? 10 : 0,
-                    y: state.isExpanded ? 2 : 0
+                    color: Color.black.opacity(state.isExpanded ? (state.isDark ? 0.35 : 0.10) : 0),
+                    radius: state.isExpanded ? (state.isDark ? 6 : 5) : 0,
+                    y: state.isExpanded ? (state.isDark ? 4 : 3) : 0
                 )
 
             // Expanded content
             if state.isExpanded, let session = state.activeSession {
                 ZStack {
                     if state.tabLayout == .leftSidebar {
-                        HStack(spacing: 8) {
+                        HStack(spacing: 6) {
                             SidebarNavView(state: state)
                                 .padding(.leading, 8)
                                 .padding(.vertical, 8)

@@ -51,12 +51,12 @@ struct TabButtonView: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 6) {
+            HStack(spacing: 7) {
                 // Status dot
                 Circle()
                     .fill(dotColor)
-                    .frame(width: 6, height: 6)
-                    .shadow(color: dotColor.opacity(0.5), radius: 2)
+                    .frame(width: 7, height: 7)
+                    .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 3)
                     .opacity(session.status == .attn ? attnOpacity : 1)
                     .onAppear {
                         if session.status == .attn {
@@ -76,7 +76,7 @@ struct TabButtonView: View {
                     }
 
                 Text(session.title)
-                    .font(.system(size: 13, weight: isActive ? .semibold : .regular))
+                    .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -88,16 +88,16 @@ struct TabButtonView: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(closeFg)
-                            .frame(width: 16, height: 16)
+                            .frame(width: 14, height: 14)
                             .background(closeHoverBg, in: Circle())
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.animation(.easeOut(duration: 0.1)))
                 }
             }
-            .padding(.leading, 8)
-            .padding(.trailing, isHovered || isActive ? 5 : 8)
-            .frame(height: 28)
+            .padding(.leading, 10)
+            .padding(.trailing, isHovered || isActive ? 4 : 10)
+            .frame(height: 26)
             .frame(minWidth: 84, maxWidth: 174)
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)

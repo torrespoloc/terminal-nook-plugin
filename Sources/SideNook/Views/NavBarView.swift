@@ -11,7 +11,10 @@ struct NavBarView: View {
             // ── Drag grip ──────────────────────────────
             dragGrip
                 .padding(.leading, 10)
-                .padding(.trailing, 6)
+                .padding(.trailing, 4)
+
+            // ── Thin divider ──────────────────────────
+            verticalDivider
 
             // ── Layout toggle (moves panel to sidebar) ─
             NavIconButton(
@@ -24,6 +27,7 @@ struct NavBarView: View {
                 state.tabLayout = .leftSidebar
             }
             .help("Switch to Sidebar Layout")
+            .padding(.horizontal, 2)
 
             // ── Thin divider ──────────────────────────
             verticalDivider
@@ -41,7 +45,7 @@ struct NavBarView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 4)
             }
             .frame(maxWidth: .infinity)
 
@@ -98,8 +102,19 @@ struct NavBarView: View {
                 ) {
                     SettingsPopoverView(state: state)
                 }
+
+                NavIconButton(
+                    icon: "arrow.up.left.and.arrow.down.right",
+                    isOn: false,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.collapse()
+                }
+                .help("Collapse Panel")
             }
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 6)
         }
         .frame(height: 40)
         .background(
@@ -121,12 +136,10 @@ struct NavBarView: View {
                         )
                         .allowsHitTesting(false)
                 }
-                .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+                .shadow(color: .black.opacity(0.50), radius: 2, y: 1)
         )
         .background(DragHandleView())
-        .padding(.horizontal, 8)
-        .padding(.top, 8)
-        .padding(.bottom, 6)
+        .padding(EdgeInsets(top: 8, leading: 8, bottom: 6, trailing: 8))
     }
 
     // MARK: - Components
@@ -135,8 +148,8 @@ struct NavBarView: View {
         VStack(spacing: 3) {
             ForEach(0..<3, id: \.self) { _ in
                 HStack(spacing: 3) {
-                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
-                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
+                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
                 }
             }
         }
@@ -147,7 +160,7 @@ struct NavBarView: View {
     private var verticalDivider: some View {
         Rectangle()
             .fill(t.stroke1)
-            .frame(width: 0.5, height: 28)
+            .frame(width: 0.5, height: 20)
     }
 }
 
@@ -172,7 +185,7 @@ struct NavIconButton: View {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isOn ? fgActive : (isHovered ? fgActive : fgMuted))
-                .frame(width: 30, height: 30)
+                .frame(width: 28, height: 28)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(isHovered ? hoverBg : Color.clear)

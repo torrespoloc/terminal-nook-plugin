@@ -17,12 +17,13 @@ struct SidebarNavView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(t.fgMute)
                         .frame(width: 28, height: 28)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Switch to Top-bar Layout")
                 .padding(.trailing, 4)
             }
-            .frame(height: 40)
+            .frame(height: 34)
             .frame(maxWidth: .infinity)
             .background(DragHandleView())
 
@@ -56,13 +57,14 @@ struct SidebarNavView: View {
                     SettingsPopoverView(state: state)
                 }
             }
-            .frame(height: 40)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 4)
 
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 
             // ── Tab list ──────────────────────────────
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 2) {
+                VStack(spacing: 3) {
                     ForEach(state.sessions) { session in
                         SidebarTabRow(
                             session: session,
@@ -78,8 +80,17 @@ struct SidebarNavView: View {
             }
 
             Spacer(minLength: 0)
+
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
+
+            Text("SideNook v1.0")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(t.fgMute)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
         }
-        .frame(width: 128)
+        .frame(width: 180)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .fill(t.L2)
@@ -99,7 +110,7 @@ struct SidebarNavView: View {
                         )
                         .allowsHitTesting(false)
                 }
-                .shadow(color: .black.opacity(0.30), radius: 2, y: 1)
+                .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
         )
     }
 
@@ -107,8 +118,8 @@ struct SidebarNavView: View {
         VStack(spacing: 3) {
             ForEach(0..<3, id: \.self) { _ in
                 HStack(spacing: 3) {
-                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
-                    Circle().fill(t.gripDot).frame(width: 3, height: 3)
+                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
+                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
                 }
             }
         }
@@ -120,7 +131,8 @@ struct SidebarNavView: View {
             Image(systemName: icon)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(isOn ? t.fg : t.fgMute)
-                .frame(width: 34, height: 34)
+                .frame(maxWidth: .infinity)
+                .frame(height: 32)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -142,19 +154,14 @@ private struct SidebarTabRow: View {
     private var t: NookTheme { NookTheme(isDark: isDark) }
 
     private var fgColor: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.90) : Color.black.opacity(0.85) }
-        if isHovered { return isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.65) }
-        return isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.42)
+        if isActive { return t.fg }
+        return t.fgMid
     }
 
     private var tabBg: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.095) : Color.white.opacity(0.95) }
-        if isHovered { return isDark ? Color.white.opacity(0.035) : Color.black.opacity(0.025) }
+        if isActive  { return t.L3 }
+        if isHovered { return t.L1 }
         return Color.clear
-    }
-
-    private var accentBar: Color {
-        isDark ? Color.white.opacity(0.55) : Color.black.opacity(0.30)
     }
 
     private var dotColor: Color {
@@ -167,14 +174,11 @@ private struct SidebarTabRow: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 5) {
-                RoundedRectangle(cornerRadius: 1, style: .continuous)
-                    .fill(isActive ? accentBar : Color.clear)
-                    .frame(width: 2, height: 14)
-
+            HStack(spacing: 8) {
                 Circle()
                     .fill(dotColor)
-                    .frame(width: 5, height: 5)
+                    .frame(width: 7, height: 7)
+                    .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 3)
                     .opacity(session.status == .attn ? attnOpacity : 1)
                     .onAppear {
                         if session.status == .attn {
@@ -194,7 +198,7 @@ private struct SidebarTabRow: View {
                     }
 
                 Text(session.title)
-                    .font(.system(size: 13, weight: isActive ? .medium : .regular))
+                    .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -206,18 +210,25 @@ private struct SidebarTabRow: View {
                         Image(systemName: "xmark")
                             .font(.system(size: 9, weight: .bold))
                             .foregroundStyle(isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45))
-                            .frame(width: 16, height: 16)
+                            .frame(width: 14, height: 14)
                             .background(Circle().fill(isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)))
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.animation(.easeOut(duration: 0.1)))
                 }
             }
-            .padding(.leading, 2)
-            .padding(.trailing, isHovered || isActive ? 4 : 8)
+            .padding(.leading, 10)
+            .padding(.trailing, isHovered || isActive ? 4 : 10)
             .frame(height: 30)
             .frame(maxWidth: .infinity)
-            .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(tabBg))
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(tabBg)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(isActive ? t.stroke3 : .clear, lineWidth: 0.5)
+                    )
+            )
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

@@ -10,6 +10,7 @@ struct AboutView: View {
     }
     private var t: NookTheme { NookTheme(isDark: isDark) }
     private var fg: Color { t.fg }
+    private var fgMid: Color { t.fgMid }
     private var fgMuted: Color { t.fgMute }
     private var dividerColor: Color {
         isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
@@ -45,14 +46,14 @@ struct AboutView: View {
                 Image(systemName: "terminal.fill")
                     .font(.system(size: 28, weight: .medium))
                     .foregroundStyle(accentColor)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 54, height: 54)
                     .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(isDark ? Color.white.opacity(0.06) : Color.black.opacity(0.04))
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(isDark ? Color(red: 0.165, green: 0.165, blue: 0.173) : Color(red: 0.925, green: 0.925, blue: 0.933))
                     )
 
                 Text("SideNook")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(fg)
 
                 Text("A lightweight floating terminal panel for macOS")
@@ -63,7 +64,7 @@ struct AboutView: View {
                     .padding(.horizontal, 16)
 
                 Text("Version 1.0.0")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
                     .foregroundStyle(fgMuted)
             }
             .padding(.top, 4)
@@ -79,10 +80,10 @@ struct AboutView: View {
                     .foregroundStyle(fg)
                 Text("AI Product Designer")
                     .font(.system(size: 12))
-                    .foregroundStyle(fgMuted)
+                    .foregroundStyle(fgMid)
                 Text("2024\u{2013}2026  \u{00B7}  MIT License")
                     .font(.system(size: 12))
-                    .foregroundStyle(fgMuted)
+                    .foregroundStyle(fgMid)
                 Button(action: {
                     if let url = URL(string: "https://www.linkedin.com/in/jacki") {
                         NSWorkspace.shared.open(url)
@@ -100,6 +101,10 @@ struct AboutView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 5, style: .continuous)
                             .fill(isDark ? Color.white.opacity(0.07) : Color.black.opacity(0.05))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                    .strokeBorder(t.stroke2, lineWidth: 0.5)
+                            )
                     )
                 }
                 .buttonStyle(.plain)

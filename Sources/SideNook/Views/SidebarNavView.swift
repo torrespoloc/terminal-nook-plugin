@@ -199,7 +199,7 @@ private struct SidebarTabRow: View {
                     }
 
                 Text(session.title)
-                    .font(.system(size: 12, weight: isActive ? .semibold : .medium)) // 12 ✓
+                    .font(.system(size: 13, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -243,7 +243,7 @@ private struct SidebarTabRow: View {
                                 .allowsHitTesting(false)
                         }
                     }
-                    .shadow(color: isActive ? .black.opacity(0.35) : .clear, radius: isActive ? 2 : 0, y: isActive ? 1 : 0)
+                    .shadow(color: (isActive && isDark) ? .black.opacity(0.35) : .clear, radius: isActive ? 2 : 0, y: isActive ? 1 : 0)
             )
             .contentShape(Rectangle())
         }

@@ -28,53 +28,8 @@ struct SettingsPopoverView: View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
 
-                // ── Group 1: Appearance + Tab Layout ─────────
+                // ── Group 1: Font Size ────────────────────────
                 settingsCard {
-                    settingsRow(
-                        icon: state.isDark ? "sun.max.fill" : "moon.fill",
-                        label: state.isDark ? "Light Mode" : "Dark Mode"
-                    ) { state.toggleAppearance() }
-
-                    sectionDivider
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "sidebar.left")
-                                .font(.system(size: 13, weight: .medium))
-                                .foregroundStyle(fgMuted)
-                                .frame(width: 18)
-                            Text("Tab Layout")
-                                .font(.system(size: 14))
-                                .foregroundStyle(fg)
-                        }
-                        HStack(spacing: 4) {
-                            layoutButton(label: "Sidebar", value: .leftSidebar)
-                            layoutButton(label: "Top Bar", value: .topBar)
-                        }
-                        .padding(.leading, 26)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-                }
-
-                // ── Group 2: Pin + Font Size ──────────────────
-                settingsCard {
-                    HStack(spacing: 8) {
-                        Image(systemName: state.isPinned ? "pin.fill" : "pin.slash")
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundStyle(fgMuted)
-                            .frame(width: 18)
-                        Text("Pin on Top")
-                            .font(.system(size: 14))
-                            .foregroundStyle(fg)
-                        Spacer()
-                        NookToggle(isOn: $state.isPinned, isDark: state.isDark)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
-
-                    sectionDivider
-
                     HStack(spacing: 8) {
                         Image(systemName: "textformat.size")
                             .font(.system(size: 13, weight: .medium))

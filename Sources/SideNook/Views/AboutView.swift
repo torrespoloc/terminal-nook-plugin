@@ -81,11 +81,11 @@ struct AboutView: View {
                 Text("AI Product Designer")
                     .font(.system(size: 12))
                     .foregroundStyle(fgMid)
-                Text("2024\u{2013}2026  \u{00B7}  MIT License")
+                Text("2025  \u{00B7}  MIT License")
                     .font(.system(size: 12))
                     .foregroundStyle(fgMid)
                 Button(action: {
-                    if let url = URL(string: "https://www.linkedin.com/in/jacki") {
+                    if let url = URL(string: "https://www.linkedin.com/in/jackelinetorres/") {
                         NSWorkspace.shared.open(url)
                     }
                 }) {

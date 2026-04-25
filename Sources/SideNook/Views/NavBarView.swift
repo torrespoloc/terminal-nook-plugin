@@ -113,16 +113,6 @@ struct NavBarView: View {
                     SettingsPopoverView(state: state)
                 }
 
-                NavIconButton(
-                    icon: "arrow.up.left.and.arrow.down.right",
-                    isOn: false,
-                    fgMuted: t.fgMute,
-                    fgActive: t.fg,
-                    isDark: state.isDark
-                ) {
-                    state.collapse()
-                }
-                .help("Collapse Panel")
             }
             .padding(.horizontal, 6)
         }

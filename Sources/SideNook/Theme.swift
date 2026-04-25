@@ -44,7 +44,9 @@ struct NookTheme {
     var innerHighlight: Color { isDark ? .white.opacity(0.06) : .white.opacity(0.90) }
 
     // ── Accent / phosphor green ───────────────────────────────────────
-    var accent: Color { Color(red: 0.208, green: 0.816, blue: 0.498) } // #35d07f
+    // Dark: bright #35d07f; Light: accessible dark green #1c7039 (~4.5:1 on white)
+    var accent: Color { isDark ? Color(red: 0.208, green: 0.816, blue: 0.498)
+                               : Color(red: 0.11,  green: 0.44,  blue: 0.23) }
 
     // ── Terminal background ───────────────────────────────────────────
     var termBg: Color { isDark ? Color(red: 0.051, green: 0.055, blue: 0.067)    // #0d0e11 (= darkL0)

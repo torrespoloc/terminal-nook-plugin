@@ -43,6 +43,16 @@ struct NavBarView: View {
                             onSelect: { state.switchToSession(session.id) },
                             onClose: { state.closeSession(session.id) }
                         )
+                        .onDrop(of: [.text], isTargeted: nil) { providers in
+                            providers.first?.loadObject(ofClass: NSString.self) { item, _ in
+                                guard let fromIDStr = item as? String,
+                                      let fromID = UUID(uuidString: fromIDStr) else { return }
+                                DispatchQueue.main.async {
+                                    state.reorderSessions(fromID: fromID, toID: session.id)
+                                }
+                            }
+                            return true
+                        }
                     }
                 }
                 .padding(.horizontal, 4)

@@ -126,5 +126,8 @@ struct TabButtonView: View {
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.15), value: isHovered)
         .animation(.easeOut(duration: 0.15), value: isActive)
+        .onDrag {
+            NSItemProvider(object: session.id.uuidString as NSString)
+        }
     }
 }

@@ -164,4 +164,13 @@ final class NookState {
     func switchToSession(_ id: UUID) {
         activeSessionID = id
     }
+
+    func reorderSessions(fromID: UUID, toID: UUID) {
+        guard fromID != toID,
+              let fromIdx = sessions.firstIndex(where: { $0.id == fromID }),
+              let toIdx   = sessions.firstIndex(where: { $0.id == toID })
+        else { return }
+        sessions.move(fromOffsets: IndexSet(integer: fromIdx),
+                      toOffset: toIdx > fromIdx ? toIdx + 1 : toIdx)
+    }
 }

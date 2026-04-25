@@ -25,8 +25,6 @@ final class NookState {
         case topBar, leftSidebar
     }
 
-    enum CommandHelpMode { case list, chat }
-
     var isExpanded: Bool = false
     var isPinned: Bool = false
     var panelPosition: CGPoint
@@ -49,7 +47,6 @@ final class NookState {
     var showAbout: Bool = false
     var reduceMotion: Bool = false
     var showCommandHelp: Bool = false
-    var commandHelpMode: CommandHelpMode = .list
 
     // Tab/session management
     var sessions: [TerminalSession] = []

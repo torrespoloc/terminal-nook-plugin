@@ -14,16 +14,16 @@ struct SidebarNavView: View {
                 Spacer()
                 Button(action: { state.tabLayout = .topBar }) {
                     Image(systemName: "rectangle.topthird.inset.filled")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))   // 13 → 14
                         .foregroundStyle(t.fgMute)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 32, height: 32)               // 28 → 32
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help("Switch to Top-bar Layout")
-                .padding(.trailing, 4)
+                .padding(.trailing, 4)                              // 4 ✓
             }
-            .frame(height: 34)
+            .frame(height: 32)                                      // 34 → 32
             .frame(maxWidth: .infinity)
             .background(DragHandleView())
 
@@ -57,14 +57,14 @@ struct SidebarNavView: View {
                     SettingsPopoverView(state: state)
                 }
             }
-            .padding(.horizontal, 6)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 8)                                // 6 → 8
+            .padding(.vertical, 4)                                  // 4 ✓
 
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 
             // ── Tab list ──────────────────────────────
             ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: 3) {
+                VStack(spacing: 4) {                                // 3 → 4
                     ForEach(state.sessions) { session in
                         SidebarTabRow(
                             session: session,
@@ -75,8 +75,8 @@ struct SidebarNavView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 6)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 8)                            // 6 → 8
+                .padding(.vertical, 8)                              // 6 → 8
             }
 
             CommandLineHelpView(state: state)
@@ -85,11 +85,11 @@ struct SidebarNavView: View {
             Rectangle().fill(t.stroke1).frame(height: 0.5)
 
             Text("SideNook v1.0")
-                .font(.system(size: 10, design: .monospaced))
+                .font(.system(size: 12, design: .monospaced))      // 12 ✓ (min label size)
                 .foregroundStyle(t.fgMute)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 12)                           // 12 ✓
+                .padding(.vertical, 8)                              // 7 → 8
         }
         .frame(width: 180)
         .background(
@@ -116,24 +116,24 @@ struct SidebarNavView: View {
     }
 
     private var dragGrip: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {                                        // 3 → 4
             ForEach(0..<3, id: \.self) { _ in
-                HStack(spacing: 3) {
-                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
-                    Circle().fill(t.fgMute).frame(width: 3, height: 3)
+                HStack(spacing: 4) {                                // 3 → 4
+                    Circle().fill(t.fgMute).frame(width: 4, height: 4)  // 3 → 4
+                    Circle().fill(t.fgMute).frame(width: 4, height: 4)  // 3 → 4
                 }
             }
         }
-        .padding(.leading, 10)
+        .padding(.leading, 8)                                       // 10 → 8
     }
 
     private func sidebarButton(icon: String, isOn: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 14, weight: .medium))           // 13 → 14
                 .foregroundStyle(isOn ? t.fg : t.fgMute)
                 .frame(maxWidth: .infinity)
-                .frame(height: 32)
+                .frame(height: 32)                                  // 32 ✓
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -175,11 +175,11 @@ private struct SidebarTabRow: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 8) {
+            HStack(spacing: 8) {                                    // 8 ✓
                 Circle()
                     .fill(dotColor)
-                    .frame(width: 7, height: 7)
-                    .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 3)
+                    .frame(width: 8, height: 8)                    // 7 → 8
+                    .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 4) // 3 → 4
                     .opacity(session.status == .attn ? attnOpacity : 1)
                     .onAppear {
                         if session.status == .attn {
@@ -199,7 +199,7 @@ private struct SidebarTabRow: View {
                     }
 
                 Text(session.title)
-                    .font(.system(size: 12, weight: isActive ? .semibold : .medium))
+                    .font(.system(size: 12, weight: isActive ? .semibold : .medium)) // 12 ✓
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -209,29 +209,29 @@ private struct SidebarTabRow: View {
                 if isHovered || isActive {
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .bold))
+                            .font(.system(size: 8, weight: .bold))  // 9 → 8
                             .foregroundStyle(isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45))
-                            .frame(width: 14, height: 14)
+                            .frame(width: 16, height: 16)           // 14 → 16
                             .background(Circle().fill(isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)))
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.animation(.easeOut(duration: 0.1)))
                 }
             }
-            .padding(.leading, 10)
-            .padding(.trailing, isHovered || isActive ? 4 : 10)
-            .frame(height: 30)
+            .padding(.leading, 8)                                   // 10 → 8
+            .padding(.trailing, isHovered || isActive ? 4 : 8)     // trailing inactive: 10 → 8
+            .frame(height: 32)                                      // 30 → 32
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                RoundedRectangle(cornerRadius: 8, style: .continuous)  // 7 → 8 (on grid)
                     .fill(tabBg)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .strokeBorder(isActive ? t.stroke3 : .clear, lineWidth: 0.5)
                     )
                     .overlay(alignment: .top) {
                         if isActive {
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
                                 .strokeBorder(
                                     LinearGradient(
                                         colors: [t.innerHighlight, .clear],

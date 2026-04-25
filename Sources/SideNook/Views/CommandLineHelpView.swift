@@ -31,52 +31,15 @@ private let allCmds: [CmdEntry] = [
     CmdEntry(cmd: "exit",   args: "",                   desc: "Close the current terminal tab."),
 ]
 
-private func getReply(_ input: String) -> String {
-    let q = input.lowercased()
-    if q.contains("large file") || q.contains("disk space") || q.contains("size") {
-        return "Find large files:\n\n  find . -size +100M\n\nSorted by size:\n\n  du -sh * | sort -rh | head -20"
-    }
-    if q.contains("hidden") || q.contains("dotfile") {
-        return "Hidden files start with a dot. List them:\n\n  ls -la\n\nThe -a flag shows all files including hidden ones."
-    }
-    if q.contains("permiss") || q.contains("chmod") {
-        return "Change permissions with chmod:\n\n  chmod 755 file   # rwxr-xr-x\n  chmod +x script  # make executable"
-    }
-    if q.contains("git") {
-        return "Common git workflow:\n\n  git status\n  git add .\n  git commit -m \"msg\"\n  git push origin main"
-    }
-    if q.contains("swift") || q.contains("build") {
-        return "Swift package commands:\n\n  swift build   # compile\n  swift test    # run tests\n  swift run     # build + run"
-    }
-    if let match = allCmds.first(where: { q.contains($0.cmd) }) {
-        return match.cmd + (match.args.isEmpty ? "" : " " + match.args) + "\n\n" + match.desc
-    }
-    return "I can help with shell commands. Try asking about ls, git, find — or describe what you want to do."
-}
-
-// MARK: - Chat Message
-
-private struct ChatMessage: Identifiable {
-    let id = UUID()
-    let isUser: Bool
-    let text: String
-}
-
 // MARK: - Main View
 
 struct CommandLineHelpView: View {
     @Bindable var state: NookState
 
-    // Chat local state
-    @State private var chatLines: [ChatMessage] = [
-        ChatMessage(isUser: false, text: "Ask me anything about shell commands.")
-    ]
-    @State private var chatInput: String = ""
     @State private var query: String = ""
 
     private var t: NookTheme { state.theme }
     private let accentGreen = Color(red: 0.21, green: 0.82, blue: 0.50)
-    private let panelHeight: CGFloat = 340
 
     private var filteredCmds: [CmdEntry] {
         if query.isEmpty { return allCmds }
@@ -87,22 +50,16 @@ struct CommandLineHelpView: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            // Trigger row area (always visible)
-            VStack(spacing: 0) {
-                Rectangle().fill(t.stroke1).frame(height: 0.5)
-                triggerRow
+        VStack(spacing: 0) {
+            if state.showCommandHelp {
+                floatingPanel
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
             }
-            // Floating panel anchored just above trigger row
-            .overlay(alignment: .top) {
-                if state.showCommandHelp {
-                    floatingPanel
-                        .offset(y: -panelHeight)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .zIndex(10)
-                }
-            }
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
+            triggerRow
         }
+        .environment(\.colorScheme, state.isDark ? .dark : .light)
     }
 
     // MARK: - Trigger Row
@@ -113,25 +70,25 @@ struct CommandLineHelpView: View {
                 state.showCommandHelp.toggle()
             }
         }) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {                                    // 6 → 8
                 Image(systemName: "info.circle")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 12, weight: .medium))       // 12 ✓ (on 4-grid)
                     .foregroundStyle(t.fgMid)
 
                 Text("Command Line Help")
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 14, weight: .medium))       // 13 → 14 (2px scale)
                     .foregroundStyle(t.fgMid)
 
                 Spacer(minLength: 0)
 
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 10, weight: .medium))
+                    .font(.system(size: 8, weight: .medium))        // 10 → 8 (on 4-grid)
                     .foregroundStyle(t.fgMute)
                     .rotationEffect(.degrees(state.showCommandHelp ? 180 : 0))
                     .animation(.easeOut(duration: 0.15), value: state.showCommandHelp)
             }
-            .padding(.vertical, 7)
-            .padding(.horizontal, 12)
+            .padding(.vertical, 8)                                  // 8 ✓
+            .padding(.horizontal, 12)                               // 12 ✓
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -141,25 +98,11 @@ struct CommandLineHelpView: View {
 
     private var floatingPanel: some View {
         VStack(spacing: 0) {
-            // Mode toggle header
-            HStack(spacing: 0) {
-                modeTab(label: "Reference", mode: .list)
-                modeTab(label: "Chat", mode: .chat)
-            }
-            .padding(.horizontal, 8)
-            .padding(.top, 8)
-            .padding(.bottom, 6)
-
+            searchBar
             Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            // Panel content
-            if state.commandHelpMode == .list {
-                listModeContent
-            } else {
-                chatModeContent
-            }
+            commandList
         }
-        .frame(width: 180, height: panelHeight)
+        .frame(width: 180)
         .background(t.L1)
         .overlay(
             UnevenRoundedRectangle(
@@ -183,210 +126,57 @@ struct CommandLineHelpView: View {
         .shadow(color: .black.opacity(0.40), radius: 8, x: 0, y: -4)
     }
 
-    private func modeTab(label: String, mode: NookState.CommandHelpMode) -> some View {
-        let isSelected = state.commandHelpMode == mode
-        return Button(action: { state.commandHelpMode = mode; query = "" }) {
-            Text(label)
-                .font(.system(size: 10, weight: isSelected ? .semibold : .medium))
-                .foregroundStyle(isSelected ? t.fg : t.fgMute)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-                .background(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(isSelected ? t.L3 : Color.clear)
-                )
+    // MARK: - Search Bar
+
+    private var searchBar: some View {
+        HStack(spacing: 8) {                                        // 6 → 8
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 12))                           // 11 → 12 (on 4-grid)
+                .foregroundStyle(t.fgMute)
+            TextField("Search commands…", text: $query)
+                .font(.system(size: 14))                           // 13 → 14 (2px scale)
+                .foregroundStyle(t.fg)
+                .textFieldStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 12)                                  // 10 → 12
+        .padding(.vertical, 8)                                     // 8 ✓
+        .background(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
     }
 
-    // MARK: - List Mode
+    // MARK: - Command List
 
-    private var listModeContent: some View {
-        VStack(spacing: 0) {
-            // Search bar
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 10))
-                    .foregroundStyle(t.fgMute)
-                TextField("Search commands…", text: $query)
-                    .font(.system(size: 11))
-                    .foregroundStyle(t.fg)
-                    .textFieldStyle(.plain)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    ForEach(filteredCmds, id: \.cmd) { entry in
-                        cmdRow(entry)
-                        Rectangle().fill(t.stroke1).frame(height: 0.5)
-                    }
+    private var commandList: some View {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 0) {
+                ForEach(filteredCmds, id: \.cmd) { entry in
+                    cmdRow(entry)
+                    Rectangle().fill(t.stroke1).frame(height: 0.5)
                 }
             }
-            .frame(maxHeight: 200)
         }
+        .frame(maxHeight: 200)
     }
 
     private func cmdRow(_ entry: CmdEntry) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
+        VStack(alignment: .leading, spacing: 4) {                  // 3 → 4
             HStack(spacing: 0) {
                 Text(entry.cmd)
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(size: 14, design: .monospaced))  // 13 → 14
                     .foregroundStyle(accentGreen)
                 if !entry.args.isEmpty {
                     Text(" " + entry.args)
-                        .font(.system(size: 11, design: .monospaced))
+                        .font(.system(size: 14, design: .monospaced)) // 13 → 14
                         .foregroundStyle(accentGreen.opacity(0.70))
                 }
             }
             Text(entry.desc)
-                .font(.system(size: 11))
+                .font(.system(size: 12))                           // 12 ✓ (secondary text, min)
                 .foregroundStyle(t.fgMute)
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)                                  // 10 → 12
+        .padding(.vertical, 8)                                     // 7 → 8
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    // MARK: - Chat Mode
-
-    private var chatModeContent: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text("Command Line Help")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(t.fg)
-                Spacer()
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            // Quick-pick search bar
-            HStack(spacing: 6) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 10))
-                    .foregroundStyle(t.fgMute)
-                TextField("Search suggestions…", text: $query)
-                    .font(.system(size: 11))
-                    .foregroundStyle(t.fg)
-                    .textFieldStyle(.plain)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            // Quick-pick suggestions (when query non-empty)
-            if !query.isEmpty {
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(spacing: 0) {
-                        ForEach(filteredCmds.prefix(4), id: \.cmd) { entry in
-                            Button(action: {
-                                chatInput = entry.cmd + (entry.args.isEmpty ? "" : " " + entry.args)
-                                query = ""
-                            }) {
-                                HStack(spacing: 4) {
-                                    Text(entry.cmd)
-                                        .font(.system(size: 11, design: .monospaced))
-                                        .foregroundStyle(accentGreen)
-                                    if !entry.args.isEmpty {
-                                        Text(entry.args)
-                                            .font(.system(size: 11, design: .monospaced))
-                                            .foregroundStyle(accentGreen.opacity(0.65))
-                                    }
-                                    Spacer(minLength: 0)
-                                }
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(t.L3.opacity(0.6))
-                                .contentShape(Rectangle())
-                            }
-                            .buttonStyle(.plain)
-                            Rectangle().fill(t.stroke1).frame(height: 0.5)
-                        }
-                    }
-                }
-                .frame(maxHeight: 90)
-
-                Rectangle().fill(t.stroke1).frame(height: 0.5)
-            }
-
-            // Chat messages
-            ScrollViewReader { proxy in
-                ScrollView(.vertical, showsIndicators: false) {
-                    LazyVStack(alignment: .leading, spacing: 6) {
-                        ForEach(chatLines) { msg in
-                            chatBubble(msg)
-                                .id(msg.id)
-                        }
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-                }
-                .onChange(of: chatLines.count) { _, _ in
-                    if let last = chatLines.last {
-                        withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
-                    }
-                }
-            }
-
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-
-            // Input row
-            HStack(spacing: 6) {
-                TextField("Ask a question…", text: $chatInput)
-                    .font(.system(size: 11))
-                    .foregroundStyle(t.fg)
-                    .textFieldStyle(.plain)
-                    .onSubmit { sendChat() }
-
-                Button(action: sendChat) {
-                    Text("↑")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.black.opacity(0.80))
-                        .frame(width: 22, height: 22)
-                        .background(Circle().fill(accentGreen))
-                }
-                .buttonStyle(.plain)
-                .disabled(chatInput.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 7)
-        }
-    }
-
-    private func chatBubble(_ msg: ChatMessage) -> some View {
-        HStack(alignment: .top, spacing: 0) {
-            if msg.isUser { Spacer(minLength: 16) }
-            Text(msg.text)
-                .font(.system(size: 11))
-                .foregroundStyle(msg.isUser ? Color.black.opacity(0.85) : t.fg)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(msg.isUser ? accentGreen.opacity(0.85) : t.L3)
-                )
-                .frame(maxWidth: .infinity, alignment: msg.isUser ? .trailing : .leading)
-            if !msg.isUser { Spacer(minLength: 16) }
-        }
-    }
-
-    private func sendChat() {
-        let text = chatInput.trimmingCharacters(in: .whitespaces)
-        guard !text.isEmpty else { return }
-        chatInput = ""
-        query = ""
-        chatLines.append(ChatMessage(isUser: true, text: text))
-        let reply = getReply(text)
-        chatLines.append(ChatMessage(isUser: false, text: reply))
     }
 }

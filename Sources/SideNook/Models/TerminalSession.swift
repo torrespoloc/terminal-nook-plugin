@@ -15,6 +15,7 @@ final class TerminalSession: Identifiable {
 
     let terminalView: LocalProcessTerminalView
     private let coordinator: SessionCoordinator
+    private(set) var processStarted = false
 
     /// Absolute buffer row indices (yDisp + buffer.y) where the user submitted input.
     var inputHighlightRows: [Int] = []
@@ -55,17 +56,22 @@ final class TerminalSession: Identifiable {
         configureView(fontSize: fontSize, appearance: appearance)
         coordinator.session = self
         terminalView.processDelegate = coordinator
+        // Process is started lazily via startProcessIfNeeded(), called from
+        // TerminalWrapperView.onFirstLayout so the PTY gets the correct
+        // terminal dimensions after SwiftUI layout has settled.
+    }
 
+    /// Called once by TerminalWrapperView after its first non-zero layout pass.
+    /// Idempotent — safe to call multiple times across tab switches.
+    func startProcessIfNeeded() {
+        guard !processStarted else { return }
+        processStarted = true
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
         var env = ProcessInfo.processInfo.environment
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
         let envArray = env.map { "\($0.key)=\($0.value)" }
-        terminalView.startProcess(
-            executable: shell,
-            args: ["-l"],
-            environment: envArray
-        )
+        terminalView.startProcess(executable: shell, args: ["-l"], environment: envArray)
     }
 
     private func configureView(fontSize: CGFloat, appearance: NookState.Appearance) {

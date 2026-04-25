@@ -8,20 +8,26 @@ import AppKit
 /// A thin TerminalWrapperView sits between SwiftUI and SwiftTerm to:
 ///   - Return mouseDownCanMoveWindow = false (fixes three-finger-drag moving the window)
 ///   - Serve as the autoresizing container SwiftUI lays out
+///   - Fire onFirstLayout so the PTY starts with correct terminal dimensions
 struct TerminalSessionView: NSViewRepresentable {
     let session: TerminalSession
 
     func makeNSView(context: Context) -> TerminalWrapperView {
         let wrapper = TerminalWrapperView()
         wrapper.addSubview(session.terminalView)
+        wrapper.onFirstLayout = { [session] in
+            session.startProcessIfNeeded()
+        }
         return wrapper
     }
 
     func updateNSView(_ nsView: TerminalWrapperView, context: Context) {
-        if session.terminalView.superview !== nsView {
-            session.terminalView.frame = nsView.bounds
-            nsView.addSubview(session.terminalView)
-        }
+        guard session.terminalView.superview !== nsView else { return }
+        // Session view moved to a new wrapper (e.g. tab switch recreated the hierarchy)
+        session.terminalView.removeFromSuperview()
+        session.terminalView.frame = nsView.bounds
+        nsView.addSubview(session.terminalView)
+        nsView.needsLayout = true
     }
 }
 
@@ -33,11 +39,22 @@ final class TerminalWrapperView: NSView {
     override var mouseDownCanMoveWindow: Bool { false }
     override var isOpaque: Bool { false }
 
-    // Always fill the single subview to our bounds.
-    // Autoresizing masks fail when the subview's initial size differs from
-    // the wrapper's initial size (0×0 from SwiftUI layout), so we override
-    // resize explicitly instead.
-    override func resizeSubviews(withOldSize oldSize: NSSize) {
-        subviews.forEach { $0.frame = bounds }
+    var onFirstLayout: (() -> Void)?
+    private var hasCalledFirstLayout = false
+
+    override func layout() {
+        // Size subviews to our bounds BEFORE calling super so that SwiftTerm's
+        // own layout() override sees the correct frame and can calculate cols/rows
+        // for TIOCSWINSZ. Relying on resizeSubviews(withOldSize:) is unreliable
+        // because setting .frame directly doesn't trigger the subview's layout cycle.
+        let b = bounds
+        subviews.forEach { if $0.frame != b { $0.frame = b } }
+        super.layout()
+
+        // Start the PTY process once — after the first real layout gives us a valid size
+        if !hasCalledFirstLayout && b.width > 0 && b.height > 0 {
+            hasCalledFirstLayout = true
+            onFirstLayout?()
+        }
     }
 }

@@ -129,11 +129,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.terminalView.paste(session.terminalView)
                 }
                 return nil
-            case "c":
-                if let session = self.state.activeSession {
-                    session.terminalView.feed(text: "\u{03}")
-                }
-                return nil
+            // Cmd+C is NOT intercepted — SwiftTerm copies selected text natively.
+            // Use Ctrl+C (delivered through the PTY) to interrupt a running process.
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 if let num = Int(chars) {
                     let index = num - 1
@@ -141,6 +138,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         self.state.switchToSession(self.state.sessions[index].id)
                     }
                 }
+                return nil
+            default:
+                break
+            }
+
+            // Scrollback navigation — these use keyCode, not character, because arrow/page keys
+            // don't produce printable chars. Only intercept Cmd+<key>; pass everything else through.
+            switch event.keyCode {
+            case 126: // Cmd + ↑ — scroll up one line
+                self.state.activeSession?.terminalView.scrollUp(lines: 1)
+                return nil
+            case 125: // Cmd + ↓ — scroll down one line
+                self.state.activeSession?.terminalView.scrollDown(lines: 1)
+                return nil
+            case 116: // Cmd + Page Up — scroll one full page up
+                if let session = self.state.activeSession {
+                    let rows = session.terminalView.getTerminal().rows
+                    session.terminalView.scrollUp(lines: rows)
+                }
+                return nil
+            case 121: // Cmd + Page Down — scroll one full page down
+                if let session = self.state.activeSession {
+                    let rows = session.terminalView.getTerminal().rows
+                    session.terminalView.scrollDown(lines: rows)
+                }
+                return nil
+            case 115: // Cmd + Home — scroll to top of buffer (clamped by SwiftTerm)
+                self.state.activeSession?.terminalView.scrollUp(lines: 50_000)
+                return nil
+            case 119: // Cmd + End — scroll to bottom of buffer (clamped by SwiftTerm)
+                self.state.activeSession?.terminalView.scrollDown(lines: 50_000)
                 return nil
             default:
                 return event
@@ -257,12 +285,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func expand() {
         guard !state.isExpanded else { return }
+        // Resize the panel BEFORE flipping isExpanded so SwiftUI's first render of
+        // ExpandedView lands in a correctly-sized frame — no intermediate squished state.
+        let screenFrame = panelScreen.visibleFrame
+        let size = NSSize(width: state.expandedSize.width, height: state.expandedSize.height)
+        let pos = clampToScreen(
+            origin: expandedOrigin(screenFrame: screenFrame),
+            size: size,
+            screenFrame: screenFrame
+        )
+        isUpdatingFrame = true
+        state.panelPosition = pos
+        panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
+        panel.ignoresMouseEvents = false
+        panel.hasShadow = true
+        isUpdatingFrame = false
+        // State flip happens after frame — SwiftUI renders ExpandedView into the correct size.
         state.expand()
+        panel.makeKey()
     }
 
     private func collapse() {
         guard state.isExpanded else { return }
+        panel.resignKey()
+        panel.hasShadow = false
+        // State flip first — SwiftUI immediately shows PillView.
+        // Frame shrinks after, so PillView renders at the correct pill size from the start.
         state.collapse()
+        let screenFrame = panelScreen.visibleFrame
+        let pillSize = pillDimensions(for: state.dockedEdge)
+        let pos = pillOrigin(screenFrame: screenFrame)
+        isUpdatingFrame = true
+        state.panelPosition = pos
+        panel.setFrame(NSRect(origin: pos, size: pillSize), display: true, animate: false)
+        panel.ignoresMouseEvents = true
+        isUpdatingFrame = false
     }
 
     // MARK: - Apply State Changes

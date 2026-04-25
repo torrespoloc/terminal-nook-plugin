@@ -119,9 +119,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.terminalView.feed(text: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
                 }
                 return nil
+            case "l":
+                if let session = self.state.activeSession {
+                    session.terminalView.feed(text: "\u{1b}[2J\u{1b}[3J\u{1b}[H")
+                }
+                return nil
             case "v":
                 if let session = self.state.activeSession {
                     session.terminalView.paste(session.terminalView)
+                }
+                return nil
+            case "c":
+                if let session = self.state.activeSession {
+                    session.terminalView.feed(text: "\u{03}")
                 }
                 return nil
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":

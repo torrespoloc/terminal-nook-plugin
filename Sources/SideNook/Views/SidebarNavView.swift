@@ -168,7 +168,7 @@ private struct SidebarTabRow: View {
         switch session.status {
         case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)
         case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)
-        case .dead: return .red.opacity(0.5)
+        case .dead: return t.fgMute
         }
     }
 
@@ -228,6 +228,21 @@ private struct SidebarTabRow: View {
                         RoundedRectangle(cornerRadius: 7, style: .continuous)
                             .strokeBorder(isActive ? t.stroke3 : .clear, lineWidth: 0.5)
                     )
+                    .overlay(alignment: .top) {
+                        if isActive {
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .strokeBorder(
+                                    LinearGradient(
+                                        colors: [t.innerHighlight, .clear],
+                                        startPoint: .top,
+                                        endPoint: .center
+                                    ),
+                                    lineWidth: 0.5
+                                )
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .shadow(color: isActive ? .black.opacity(0.35) : .clear, radius: isActive ? 2 : 0, y: isActive ? 1 : 0)
             )
             .contentShape(Rectangle())
         }

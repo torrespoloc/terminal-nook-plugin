@@ -32,10 +32,19 @@ final class NookState {
     var expandedSize: CGSize = CGSize(width: 450, height: 600)
     var dockedEdge: ScreenEdge = .top
     var appearance: Appearance = .dark
-    var tabLayout: TabLayout = .leftSidebar
+    var tabLayout: TabLayout = .leftSidebar {
+        didSet {
+            guard oldValue != tabLayout, isExpanded else { return }
+            let h = expandedSize.height
+            expandedSize = tabLayout == .topBar
+                ? CGSize(width: 720, height: h)
+                : CGSize(width: 820, height: h)
+        }
+    }
     var fontSize: CGFloat = 13
     var showSettings: Bool = false
     var showAbout: Bool = false
+    var reduceMotion: Bool = false
 
     // Tab/session management
     var sessions: [TerminalSession] = []

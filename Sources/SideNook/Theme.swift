@@ -19,10 +19,10 @@ struct NookTheme {
     static let darkL3 = Color(red: 0.149, green: 0.165, blue: 0.239) // #262a3d
 
     // ── Elevation layers ──────────────────────────────────────────────
-    var L0: Color { isDark ? Self.darkL0 : Color(white: 0.96) }
-    var L1: Color { isDark ? Self.darkL1 : Color(white: 0.97) }
-    var L2: Color { isDark ? Self.darkL2 : Color(white: 0.92) }
-    var L3: Color { isDark ? Self.darkL3 : Color(white: 0.985) }
+    var L0: Color { isDark ? Self.darkL0 : Color(white: 0.965, opacity: 0.98) }   // light: rgba(246,246,246,0.98)
+    var L1: Color { isDark ? Self.darkL1 : Color.black.opacity(0.025) }            // light: rgba(0,0,0,0.025)
+    var L2: Color { isDark ? Self.darkL2 : Color.white.opacity(0.62) }             // light: rgba(255,255,255,0.62)
+    var L3: Color { isDark ? Self.darkL3 : Color.white.opacity(0.95) }             // light: rgba(255,255,255,0.95)
 
     // ── Borders / strokes ─────────────────────────────────────────────
     // Strokes are opacity-based and go ON TOP of absolute layer colours — correct.
@@ -42,13 +42,17 @@ struct NookTheme {
 
     // ── Highlights ────────────────────────────────────────────────────
     var innerHighlight: Color { isDark ? .white.opacity(0.06) : .white.opacity(0.90) }
-    var gripDot:        Color { isDark ? .white.opacity(0.18) : .black.opacity(0.18) }
+
+    // ── Accent / phosphor green ───────────────────────────────────────
+    var accent: Color { Color(red: 0.208, green: 0.816, blue: 0.498) } // #35d07f
+
+    // ── Terminal background ───────────────────────────────────────────
+    var termBg: Color { isDark ? Color(red: 0.051, green: 0.055, blue: 0.067)    // #0d0e11 (= darkL0)
+                               : Color(red: 0.961, green: 0.961, blue: 0.957) }  // #f5f5f3
 
     // ── Control colours ───────────────────────────────────────────────
     // Row group bg: rgba(0,0,0,0.15) darkens inside L3 popover
     var groupBg:    Color { isDark ? Color.black.opacity(0.15) : Color.black.opacity(0.04) }
-    // Toggle warm on-state
-    var toggleWarm: Color { Color(red: 0.910, green: 0.710, blue: 0.420) } // #e8b56b
     // Danger (Quit)
     var danger:     Color { isDark ? Color(red: 0.957, green: 0.627, blue: 0.627)  // #f4a0a0
                                    : Color.red.opacity(0.80) }
@@ -56,5 +60,5 @@ struct NookTheme {
     // ── Status dots ───────────────────────────────────────────────────
     var dotLive: Color { Color(red: 0.21, green: 0.82, blue: 0.50) } // #35d07f
     var dotAttn: Color { Color(red: 0.95, green: 0.71, blue: 0.18) } // #f0b429
-    var dotDead: Color { .red.opacity(0.5) }
+    var dotDead: Color { Color(red: 0.973, green: 0.443, blue: 0.443, opacity: 0.60) } // #f87171 @ 60%
 }

@@ -16,7 +16,7 @@ struct AboutView: View {
         isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
     }
     private var codeBg: Color {
-        isDark ? Color.white.opacity(0.06) : Color.black.opacity(0.04)
+        isDark ? Color.black.opacity(0.35) : Color.black.opacity(0.08)
     }
     private var accentColor: Color {
         isDark ? Color.white.opacity(0.60) : Color.black.opacity(0.55)
@@ -31,7 +31,7 @@ struct AboutView: View {
                     Image(systemName: "xmark")
                         .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(fgMuted)
-                        .frame(width: 26, height: 26)
+                        .frame(width: 22, height: 22)
                         .background(
                             Circle().fill(isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06))
                         )
@@ -57,7 +57,7 @@ struct AboutView: View {
                     .foregroundStyle(fg)
 
                 Text("A lightweight floating terminal panel for macOS")
-                    .font(.system(size: 13))
+                    .font(.system(size: 12))
                     .foregroundStyle(fgMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -96,13 +96,13 @@ struct AboutView: View {
                             .font(.system(size: 12, weight: .medium))
                     }
                     .foregroundStyle(fgMuted)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                     .background(
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
                             .fill(isDark ? Color.white.opacity(0.07) : Color.black.opacity(0.05))
                             .overlay(
-                                RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
                                     .strokeBorder(t.stroke2, lineWidth: 0.5)
                             )
                     )

@@ -180,6 +180,18 @@ struct NavIconButton: View {
         isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
     }
 
+    private var activeBg: Color {
+        isDark ? Color(red: 0.149, green: 0.165, blue: 0.239) : Color.white.opacity(0.95)
+    }
+
+    private var activeBorder: Color {
+        isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.12)
+    }
+
+    private var activeHighlight: Color {
+        isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.90)
+    }
+
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
@@ -188,7 +200,25 @@ struct NavIconButton: View {
                 .frame(width: 28, height: 28)
                 .background(
                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovered ? hoverBg : Color.clear)
+                        .fill(isOn ? activeBg : (isHovered ? hoverBg : Color.clear))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .strokeBorder(isOn ? activeBorder : .clear, lineWidth: 0.5)
+                        )
+                        .overlay(alignment: .top) {
+                            if isOn {
+                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                    .strokeBorder(
+                                        LinearGradient(
+                                            colors: [activeHighlight, .clear],
+                                            startPoint: .top,
+                                            endPoint: .center
+                                        ),
+                                        lineWidth: 0.5
+                                    )
+                                    .allowsHitTesting(false)
+                            }
+                        }
                 )
                 .contentShape(Rectangle())
         }

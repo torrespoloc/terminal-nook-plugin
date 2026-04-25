@@ -11,41 +11,35 @@ struct TabButtonView: View {
     @State private var isHovered = false
     @State private var attnOpacity: Double = 1.0
 
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
     // MARK: - Palette
 
     private var fgColor: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.90) : Color.black.opacity(0.85) }
-        if isHovered { return isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.65) }
-        return isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.42)
+        if isActive  { return t.fg }
+        if isHovered { return t.fgMid }
+        return t.fgMid
     }
 
     private var tabBg: Color {
-        if isActive  { return isDark ? Color.white.opacity(0.095) : Color.white.opacity(0.95) }
-        if isHovered { return isDark ? Color.white.opacity(0.035) : Color.black.opacity(0.025) }
+        if isActive  { return t.L3 }
+        if isHovered { return t.L1 }
         return Color.clear
     }
 
-    private var tabBorder: Color {
-        isDark ? Color.white.opacity(0.13) : Color.black.opacity(0.12)
-    }
+    private var tabBorder: Color { t.stroke3 }
 
-    private var innerHighlight: Color {
-        isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.90)
-    }
+    private var innerHighlight: Color { t.innerHighlight }
 
-    private var closeFg: Color {
-        isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45)
-    }
+    private var closeFg: Color { t.fgMid }
 
-    private var closeHoverBg: Color {
-        isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
-    }
+    private var closeHoverBg: Color { t.stroke2 }
 
     private var dotColor: Color {
         switch session.status {
         case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)  // #35d07f
         case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)  // #f0b429
-        case .dead: return .red.opacity(0.5)
+        case .dead: return t.fgMute
         }
     }
 

@@ -2,6 +2,7 @@
 import Observation
 import AppKit
 import ServiceManagement
+import SwiftUI
 
 @MainActor
 @Observable
@@ -41,6 +42,8 @@ final class NookState {
                 : CGSize(width: 820, height: h)
         }
     }
+    var accentHex: String = "#35d07f"
+    var accentColor: Color { Color(hex: accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498) }
     var fontSize: CGFloat = 13
 
     var showSettings: Bool = false
@@ -61,7 +64,7 @@ final class NookState {
 
     var isVerticalEdge: Bool { dockedEdge == .left || dockedEdge == .right }
     var isDark: Bool { appearance == .dark }
-    var theme: NookTheme { NookTheme(isDark: isDark) }
+    var theme: NookTheme { NookTheme(isDark: isDark, accent: accentColor) }
 
     /// Launch at Login via SMAppService. Requires app to be installed (not run from swift build).
     var launchAtLogin: Bool {

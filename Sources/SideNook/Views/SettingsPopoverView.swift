@@ -24,9 +24,39 @@ struct SettingsPopoverView: View {
 
     @State private var showShortcuts = false
 
+    private let accentPresets: [(name: String, hex: String)] = [
+        ("Phosphor green", "#35d07f"),
+        ("Amber",          "#f0b429"),
+        ("Ice",            "#6ec1ff"),
+        ("Magenta",        "#e05a9b"),
+        ("Classic",        "#4ade80"),
+    ]
+
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading, spacing: 8) {
+
+                // ── Group 0: Accent Color ─────────────────────
+                settingsCard {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(t.accent)
+                            .frame(width: 14, height: 14)
+                            .frame(width: 18, height: 18)
+                        Text("Accent Color")
+                            .font(.system(size: 14))
+                            .foregroundStyle(fg)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            ForEach(accentPresets, id: \.hex) { preset in
+                                accentSwatchButton(hex: preset.hex, name: preset.name)
+                            }
+                            customAccentSwatch
+                        }
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                }
 
                 // ── Group 1: Font Size ────────────────────────
                 settingsCard {
@@ -116,7 +146,7 @@ struct SettingsPopoverView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
                         Spacer()
-                        NookToggle(isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }), isDark: state.isDark)
+                        NookToggle(isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }), theme: t)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -132,7 +162,7 @@ struct SettingsPopoverView: View {
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
                         Spacer()
-                        NookToggle(isOn: $state.reduceMotion, isDark: state.isDark)
+                        NookToggle(isOn: $state.reduceMotion, theme: t)
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
@@ -268,5 +298,113 @@ struct SettingsPopoverView: View {
                 )
         }
         .buttonStyle(.plain)
+    }
+
+    // MARK: - Accent helpers
+
+    private var accentBinding: Binding<Color> {
+        Binding(
+            get: { Color(hex: state.accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498) },
+            set: { state.accentHex = $0.hexString() ?? "#35d07f" }
+        )
+    }
+
+    private var isCustomAccent: Bool {
+        !accentPresets.contains { $0.hex == state.accentHex }
+    }
+
+    private func accentSwatchButton(hex: String, name: String) -> some View {
+        let color = Color(hex: hex) ?? .green
+        let isSelected = state.accentHex == hex
+        return Button(action: { state.accentHex = hex }) {
+            ZStack {
+                if isSelected {
+                    Circle()
+                        .strokeBorder(color, lineWidth: 1.5)
+                        .frame(width: 22, height: 22)
+                    Circle()
+                        .strokeBorder(t.L0, lineWidth: 2)
+                        .frame(width: 19, height: 19)
+                }
+                Circle()
+                    .fill(color)
+                    .frame(width: 14, height: 14)
+                    .overlay(
+                        Group {
+                            if !isSelected {
+                                Circle().strokeBorder(t.stroke3, lineWidth: 1)
+                            }
+                        }
+                    )
+            }
+            .frame(width: 22, height: 22)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Accent: \(name)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    private var customAccentSwatch: some View {
+        let currentColor = Color(hex: state.accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498)
+        return ZStack {
+            // Visual layer — non-interactive
+            ZStack {
+                if isCustomAccent {
+                    Circle()
+                        .strokeBorder(currentColor, lineWidth: 1.5)
+                        .frame(width: 22, height: 22)
+                    Circle()
+                        .strokeBorder(t.L0, lineWidth: 2)
+                        .frame(width: 19, height: 19)
+                }
+                Circle()
+                    .fill(currentColor)
+                    .frame(width: 14, height: 14)
+                    .overlay(
+                        Circle()
+                            .strokeBorder(t.fgMute, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
+                    )
+            }
+            .frame(width: 22, height: 22)
+            .allowsHitTesting(false)
+
+            // Transparent NSColorWell — provides click-to-open-color-panel
+            TransparentColorWell(color: accentBinding)
+                .frame(width: 22, height: 22)
+                .opacity(0)
+        }
+        .frame(width: 22, height: 22)
+        .accessibilityLabel("Accent: Custom color")
+        .accessibilityAddTraits(isCustomAccent ? .isSelected : [])
+    }
+}
+
+// MARK: - Transparent NSColorWell wrapper
+private struct TransparentColorWell: NSViewRepresentable {
+    @Binding var color: Color
+
+    func makeCoordinator() -> Coordinator { Coordinator(self) }
+
+    func makeNSView(context: Context) -> NSColorWell {
+        let well = NSColorWell(style: .minimal)
+        well.isBordered = false
+        well.target = context.coordinator
+        well.action = #selector(Coordinator.colorChanged(_:))
+        return well
+    }
+
+    func updateNSView(_ well: NSColorWell, context: Context) {
+        context.coordinator.parent = self
+        if let srgb = NSColor(color).usingColorSpace(.sRGB) {
+            well.color = srgb
+        }
+    }
+
+    final class Coordinator: NSObject {
+        var parent: TransparentColorWell
+        init(_ p: TransparentColorWell) { parent = p }
+        @MainActor @objc func colorChanged(_ sender: NSColorWell) {
+            parent.color = Color(sender.color)
+        }
     }
 }

@@ -47,7 +47,7 @@ struct NavBarView: View {
                             providers.first?.loadObject(ofClass: NSString.self) { item, _ in
                                 guard let fromIDStr = item as? String,
                                       let fromID = UUID(uuidString: fromIDStr) else { return }
-                                DispatchQueue.main.async {
+                                Task { @MainActor in
                                     state.reorderSessions(fromID: fromID, toID: session.id)
                                 }
                             }

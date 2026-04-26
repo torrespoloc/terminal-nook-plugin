@@ -238,6 +238,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self, let session = self.state.activeSession else { return }
+                self.state.isWindowActive = true
                 self.panel.makeFirstResponder(session.terminalView)
             }
         }
@@ -249,6 +250,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ) { [weak self] _ in
             MainActor.assumeIsolated {
                 guard let self else { return }
+                self.state.isWindowActive = false
                 // Yield first responder so SwiftTerm calls resignFirstResponder
                 // → caretViewTracksFocus draws hollow cursor, stops blink.
                 self.panel.makeFirstResponder(self.panel.contentView)

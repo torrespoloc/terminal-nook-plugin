@@ -46,6 +46,8 @@ final class NookState {
     var accentColor: Color { Color(hex: accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498) }
     var fontSize: CGFloat = 13
 
+    var isWindowActive: Bool = true
+
     var showSettings: Bool = false
     var showAbout: Bool = false
     var reduceMotion: Bool = false

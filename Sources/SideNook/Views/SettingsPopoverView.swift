@@ -54,10 +54,9 @@ struct SettingsPopoverView: View {
                             }
                             customAccentSwatch
                         }
-                        .padding(.leading, 26)
+                        .padding(.leading, 23)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(12)
                 }
 
                 // ── Group 1: Font Size ────────────────────────
@@ -100,8 +99,7 @@ struct SettingsPopoverView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(12)
                 }
 
                 // ── Group 3: Dock Position + Launch at Login + Reduce Motion ──
@@ -134,8 +132,7 @@ struct SettingsPopoverView: View {
                         }
                         .padding(.leading, 26)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(12)
 
                     sectionDivider
 
@@ -150,8 +147,7 @@ struct SettingsPopoverView: View {
                         Spacer()
                         NookToggle(isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }), theme: t)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(12)
 
                     sectionDivider
 
@@ -166,8 +162,7 @@ struct SettingsPopoverView: View {
                         Spacer()
                         NookToggle(isOn: $state.reduceMotion, theme: t)
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 10)
+                    .padding(12)
                 }
 
                 // ── Group 4: Shortcuts + About + Quit ─────────
@@ -186,8 +181,7 @@ struct SettingsPopoverView: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(fgMuted)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(12)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -200,7 +194,13 @@ struct SettingsPopoverView: View {
                     sectionDivider
 
                     settingsRow(icon: "info.circle", label: "About SideNook", showChevron: true) {
-                        state.showAbout = true
+                        state.showAbout.toggle()
+                    }
+                    .popover(
+                        isPresented: Binding(get: { state.showAbout }, set: { state.showAbout = $0 }),
+                        arrowEdge: .leading
+                    ) {
+                        AboutView(isDark: state.isDark) { state.showAbout = false }
                     }
 
                     sectionDivider
@@ -219,8 +219,7 @@ struct SettingsPopoverView: View {
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundStyle(t.fgMute)
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        .padding(12)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -231,12 +230,6 @@ struct SettingsPopoverView: View {
         .frame(width: 260)
         .frame(maxHeight: 520)
         .background(bg)
-        .popover(
-            isPresented: Binding(get: { state.showAbout }, set: { state.showAbout = $0 }),
-            arrowEdge: .leading
-        ) {
-            AboutView(isDark: state.isDark) { state.showAbout = false }
-        }
     }
 
     // MARK: - Helpers
@@ -279,8 +272,7 @@ struct SettingsPopoverView: View {
                         .foregroundStyle(t.fgMute)
                 }
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
+            .padding(12)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

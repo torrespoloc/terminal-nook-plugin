@@ -8,9 +8,10 @@ struct SidebarNavView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // ── Drag grip row (with layout toggle) ────
+            // ── Traffic lights + layout toggle row ────
             HStack {
-                dragGrip
+                TrafficLightButtonsView(state: state)
+                    .padding(.leading, 8)
                 Spacer()
                 Button(action: { state.tabLayout = .topBar }) {
                     Image(systemName: "rectangle.topthird.inset.filled")
@@ -52,6 +53,7 @@ struct SidebarNavView: View {
                 .help("Settings")
                 .popover(
                     isPresented: Binding(get: { state.showSettings }, set: { state.showSettings = $0 }),
+                    attachmentAnchor: .point(.topTrailing),
                     arrowEdge: .trailing
                 ) {
                     SettingsPopoverView(state: state)

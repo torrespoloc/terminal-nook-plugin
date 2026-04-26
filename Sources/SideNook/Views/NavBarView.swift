@@ -8,10 +8,10 @@ struct NavBarView: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // ── Drag grip ──────────────────────────────
-            dragGrip
-                .padding(.leading, 10)
-                .padding(.trailing, 4)
+            // ── Traffic lights ────────────────────────
+            TrafficLightButtonsView(state: state)
+                .padding(.leading, 8)
+                .padding(.trailing, 6)
 
             // ── Thin divider ──────────────────────────
             verticalDivider
@@ -108,7 +108,8 @@ struct NavBarView: View {
                         get: { state.showSettings },
                         set: { state.showSettings = $0 }
                     ),
-                    arrowEdge: .bottom
+                    attachmentAnchor: .point(.bottom),
+                    arrowEdge: .top
                 ) {
                     SettingsPopoverView(state: state)
                 }

@@ -1,5 +1,6 @@
 // Sources/SideNook/Views/CommandLineHelpView.swift
 import SwiftUI
+import AppKit
 
 // MARK: - Data
 
@@ -216,9 +217,10 @@ struct CommandLineHelpView: View {
                 .frame(width: 20, height: 3)
         }
         .frame(maxWidth: .infinity, minHeight: 12, maxHeight: 12)
+        .background(WindowDragBlocker())
         .contentShape(Rectangle())
         .gesture(
-            DragGesture()
+            DragGesture(minimumDistance: 0)
                 .onChanged { value in
                     helpPanelHeight = max(80, min(380, dragStartHeight - value.translation.height))
                 }
@@ -332,4 +334,15 @@ struct CommandLineHelpView: View {
         }
         .animation(.easeOut(duration: 0.10), value: isHovered)
     }
+}
+
+// MARK: - Window Drag Blocker
+
+private struct WindowDragBlocker: NSViewRepresentable {
+    func makeNSView(context: Context) -> BlockerNSView { BlockerNSView() }
+    func updateNSView(_ nsView: BlockerNSView, context: Context) {}
+}
+
+private final class BlockerNSView: NSView {
+    override var mouseDownCanMoveWindow: Bool { false }
 }

@@ -43,7 +43,7 @@ struct SettingsPopoverView: View {
                             Circle()
                                 .fill(t.accent)
                                 .frame(width: 14, height: 14)
-                                .frame(width: 18, height: 18)
+                                .frame(width: 16, height: 16)
                             Text("Accent Color")
                                 .font(.system(size: 14))
                                 .foregroundStyle(fg)
@@ -54,7 +54,7 @@ struct SettingsPopoverView: View {
                             }
                             customAccentSwatch
                         }
-                        .padding(.leading, 23)
+                        .padding(.leading, 20)
                     }
                     .padding(12)
                 }
@@ -65,7 +65,7 @@ struct SettingsPopoverView: View {
                         Image(systemName: "textformat.size")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(fgMuted)
-                            .frame(width: 18)
+                            .frame(width: 16)
                         Text("Font Size")
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
@@ -109,7 +109,7 @@ struct SettingsPopoverView: View {
                             Image(systemName: "rectangle.dashed")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(fgMuted)
-                                .frame(width: 18)
+                                .frame(width: 16)
                             Text("Dock Position")
                                 .font(.system(size: 14))
                                 .foregroundStyle(fg)
@@ -121,16 +121,16 @@ struct SettingsPopoverView: View {
                                         .font(.system(size: 12, weight: state.dockedEdge == edge ? .semibold : .regular))
                                         .foregroundStyle(state.dockedEdge == edge ? fg : fgMuted)
                                         .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 5)
+                                        .padding(.vertical, 4)
                                         .background(
-                                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                            RoundedRectangle(cornerRadius: 4, style: .continuous)
                                                 .fill(state.dockedEdge == edge ? segmentActiveBg : Color.clear)
                                         )
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.leading, 26)
+                        .padding(.leading, 24)
                     }
                     .padding(12)
 
@@ -140,7 +140,7 @@ struct SettingsPopoverView: View {
                         Image(systemName: "arrow.up.circle")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(fgMuted)
-                            .frame(width: 18)
+                            .frame(width: 16)
                         Text("Launch at Login")
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
@@ -155,7 +155,7 @@ struct SettingsPopoverView: View {
                         Image(systemName: "hand.raised")
                             .font(.system(size: 13, weight: .medium))
                             .foregroundStyle(fgMuted)
-                            .frame(width: 18)
+                            .frame(width: 16)
                         Text("Reduce Motion")
                             .font(.system(size: 14))
                             .foregroundStyle(fg)
@@ -172,7 +172,7 @@ struct SettingsPopoverView: View {
                             Image(systemName: "keyboard")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(fgMuted)
-                                .frame(width: 18)
+                                .frame(width: 16)
                             Text("Keyboard Shortcuts")
                                 .font(.system(size: 14))
                                 .foregroundStyle(fg)
@@ -210,7 +210,7 @@ struct SettingsPopoverView: View {
                             Image(systemName: "power")
                                 .font(.system(size: 13, weight: .medium))
                                 .foregroundStyle(t.danger)
-                                .frame(width: 18)
+                                .frame(width: 16)
                             Text("Quit SideNook")
                                 .font(.system(size: 14))
                                 .foregroundStyle(t.danger)
@@ -225,7 +225,7 @@ struct SettingsPopoverView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .padding(10)
+            .padding(12)
         }
         .frame(width: 260)
         .frame(maxHeight: 520)
@@ -239,10 +239,10 @@ struct SettingsPopoverView: View {
             content()
         }
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(cardBg)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
                         .strokeBorder(cardStroke, lineWidth: 0.5)
                 )
         )
@@ -261,7 +261,7 @@ struct SettingsPopoverView: View {
                 Image(systemName: icon)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(fgMuted)
-                    .frame(width: 18)
+                    .frame(width: 16)
                 Text(label)
                     .font(.system(size: 14))
                     .foregroundStyle(fg)
@@ -315,10 +315,10 @@ struct SettingsPopoverView: View {
                 if isSelected {
                     Circle()
                         .strokeBorder(color, lineWidth: 1.5)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 32, height: 32)
                     Circle()
                         .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 27, height: 27)
+                        .frame(width: 28, height: 28)
                 }
                 Circle()
                     .fill(color)
@@ -331,7 +331,7 @@ struct SettingsPopoverView: View {
                         }
                     )
             }
-            .frame(width: 30, height: 30)
+            .frame(width: 32, height: 32)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Accent: \(name)")
@@ -346,10 +346,10 @@ struct SettingsPopoverView: View {
                 if isCustomAccent {
                     Circle()
                         .strokeBorder(currentColor, lineWidth: 1.5)
-                        .frame(width: 30, height: 30)
+                        .frame(width: 32, height: 32)
                     Circle()
                         .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 27, height: 27)
+                        .frame(width: 28, height: 28)
                 }
                 Circle()
                     .fill(currentColor)
@@ -359,15 +359,15 @@ struct SettingsPopoverView: View {
                             .strokeBorder(t.fgMute, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
                     )
             }
-            .frame(width: 30, height: 30)
+            .frame(width: 32, height: 32)
             .allowsHitTesting(false)
 
             // Transparent NSColorWell — provides click-to-open-color-panel
             TransparentColorWell(color: accentBinding)
-                .frame(width: 30, height: 30)
+                .frame(width: 32, height: 32)
                 .opacity(0)
         }
-        .frame(width: 30, height: 30)
+        .frame(width: 32, height: 32)
         .accessibilityLabel("Accent: Custom color")
         .accessibilityAddTraits(isCustomAccent ? .isSelected : [])
     }

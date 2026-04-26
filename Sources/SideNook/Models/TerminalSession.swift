@@ -83,7 +83,7 @@ final class TerminalSession: Identifiable {
     func applyAppearance(_ appearance: NookState.Appearance) {
         switch appearance {
         case .dark:
-            terminalView.nativeBackgroundColor = NSColor(red: 0.157, green: 0.165, blue: 0.188, alpha: 1)
+            terminalView.nativeBackgroundColor = NSColor(red: 0.114, green: 0.118, blue: 0.141, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
             terminalView.installColors(Self.darkPalette)
         case .light:

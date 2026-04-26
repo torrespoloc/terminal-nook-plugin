@@ -149,7 +149,7 @@ struct CommandLineHelpView: View {
 
     @State private var query: String = ""
     @State private var helpPanelHeight: CGFloat = 248
-    @State private var dragStartHeight: CGFloat = 248
+    @State private var lastDragTranslation: CGFloat = 0
     @State private var hoveredEntryID: UUID? = nil
 
     private var t: NookTheme { state.theme }
@@ -214,19 +214,20 @@ struct CommandLineHelpView: View {
         ZStack {
             Capsule()
                 .fill(t.fgMute.opacity(0.45))
-                .frame(width: 20, height: 3)
+                .frame(width: 20, height: 4)
         }
-        .frame(maxWidth: .infinity, minHeight: 12, maxHeight: 12)
+        .frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
         .background(WindowDragBlocker())
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 0)
                 .onChanged { value in
-                    helpPanelHeight = max(80, min(380, dragStartHeight - value.translation.height))
+                    let delta = value.translation.height - lastDragTranslation
+                    lastDragTranslation = value.translation.height
+                    helpPanelHeight = max(80, min(384, helpPanelHeight - delta))
                 }
-                .onEnded { value in
-                    helpPanelHeight = max(80, min(380, dragStartHeight - value.translation.height))
-                    dragStartHeight = helpPanelHeight
+                .onEnded { _ in
+                    lastDragTranslation = 0
                 }
         )
         .onHover { isHovering in

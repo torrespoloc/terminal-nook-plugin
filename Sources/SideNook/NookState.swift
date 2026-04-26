@@ -110,7 +110,12 @@ final class NookState {
         let _ = createSession()
     }
 
-    func expand()   { isExpanded = true }
+    func expand() {
+        if activeSession == nil, let first = sessions.first {
+            activeSessionID = first.id
+        }
+        isExpanded = true
+    }
     func collapse() { isPinned = false; isExpanded = false }
     func toggle()   { isExpanded.toggle() }
     func togglePin() { isPinned.toggle() }

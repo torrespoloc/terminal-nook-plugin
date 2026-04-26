@@ -17,6 +17,14 @@ Entry point: `Sources/SideNook/main.swift`
 - All `@Observable` state lives in `NookState`. Don't create parallel state objects.
 - Never start the PTY process in `init`. Always use `startProcessIfNeeded()`, which is called from `TerminalWrapperView.onFirstLayout` after SwiftUI layout has settled.
 
+## Token Efficiency Rules
+
+- NEVER explore broadly to diagnose. Read only the files directly named in the bug report.
+- For diagnosis tasks: ask me which files to read if unsure. Max 3 files before reporting findings.
+- Do not run parallel file sweeps unless explicitly asked.
+- After identifying an issue, stop and report before fixing. Wait for approval.
+- Prefer grep/search over full file reads when looking for a specific function or pattern.
+
 ## Window controls
 Traffic light buttons are custom SwiftUI drawn circles — never `NSWindowButton` or any native button.
 - Geometry: always use `TrafficLightMetrics.shared`. Never hardcode pt values.
@@ -77,6 +85,28 @@ To send text input to a running shell, use `TerminalSession.send(text:)` — it 
 | `Views/CommandLineHelpView.swift` | Collapsible command reference panel (sidebar only); resizable, clickable rows |
 | `Terminal/TerminalView.swift` | `NSViewRepresentable`; `TerminalWrapperView` uses `layout()` override + `onFirstLayout` callback |
 | `_metadata/claude-design_UI-spec-handoff.md` | Complete design token and component spec (read-only reference) |
+
+## Feature areas → files
+
+Where to look first for each concern:
+
+| Concern | File(s) | Key symbols |
+|---|---|---|
+| Panel state machine (pill ↔ expanded) | `Views/SideNookView.swift` · `NookState.swift` | `isExpanded`, `expand()`, `collapse()` |
+| Pill UI | `Views/PillView.swift` | `PillView` |
+| Expanded UI (layout selector) | `Views/ExpandedView.swift` | `ExpandedView`, `panelContent()` |
+| Top-bar nav | `Views/NavBarView.swift` | `NavBarView`, `NavIconButton` |
+| Left-sidebar nav | `Views/SidebarNavView.swift` | `SidebarNavView`, `SidebarTabRow` |
+| Help panel resize drag | `Views/CommandLineHelpView.swift` L212–239 | `resizeHandle`, `DragGesture` |
+| Window drag (move panel) | `Views/DragHandleView.swift` | `DragHandleView`, `mouseDownCanMoveWindow` |
+| Edge resize handles | `Views/ResizeHandleView.swift` | `ResizeHandleView`, `ResizeEdge` |
+| Pinning | `NookState.swift` · `Views/NavBarView.swift` · `Views/SidebarNavView.swift` | `isPinned`, `togglePin()` |
+| Accent color + theming | `Theme.swift` · `NookState.swift` · `Views/SettingsPopoverView.swift` | `NookTheme.accent`, `accentHex` |
+| Terminal rendering | `Terminal/TerminalView.swift` · `Views/TerminalContainerView.swift` | `TerminalSessionView`, `TerminalWrapperView` |
+| Session lifecycle | `Models/TerminalSession.swift` · `NookState.swift` | `createSession()`, `closeSession()`, `activeSession` |
+| Mouse monitoring / edge snap | `AppDelegate.swift` | `hitTestRect()`, `snapToNearestEdge()` |
+| Custom traffic lights | `Views/TrafficLightButtonsView.swift` · `TrafficLightColors.swift` · `TrafficLightMetrics.swift` | `Color.tl*`, `TrafficLightMetrics.shared` |
+| Settings UI | `Views/SettingsPopoverView.swift` | `SettingsPopoverView` |
 
 ## Keyboard shortcuts (AppDelegate)
 Handled via a local `NSEvent` monitor (`keyCode`-based, not character-based):

@@ -17,9 +17,6 @@ final class TerminalSession: Identifiable {
     private let coordinator: SessionCoordinator
     private(set) var processStarted = false
 
-    /// Absolute buffer row indices (yDisp + buffer.y) where the user submitted input.
-    var inputHighlightRows: [Int] = []
-
     // MARK: - ANSI Color Palettes (matching Terminal.app)
 
     private static func c(_ r: UInt16, _ g: UInt16, _ b: UInt16) -> SwiftTerm.Color {
@@ -86,7 +83,7 @@ final class TerminalSession: Identifiable {
     func applyAppearance(_ appearance: NookState.Appearance) {
         switch appearance {
         case .dark:
-            terminalView.nativeBackgroundColor = NSColor(red: 0.051, green: 0.055, blue: 0.067, alpha: 1)
+            terminalView.nativeBackgroundColor = NSColor(red: 0.157, green: 0.165, blue: 0.188, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
             terminalView.installColors(Self.darkPalette)
         case .light:
@@ -96,24 +93,9 @@ final class TerminalSession: Identifiable {
         }
     }
 
-    /// Records the current cursor row as a user-input row for highlight rendering.
-    /// Stores absolute buffer position so the highlight stays correct as content scrolls.
-    func recordInputRow() {
-        let term = terminalView.getTerminal()
-        let absRow = term.buffer.yDisp + term.buffer.y
-        if inputHighlightRows.last != absRow {
-            inputHighlightRows.append(absRow)
-            if inputHighlightRows.count > 200 {
-                inputHighlightRows.removeFirst()
-            }
-        }
-    }
-
     /// Restart the shell process inside the existing terminal view.
-    /// Clears highlight rows but preserves scroll buffer so history stays visible.
     func restart() {
         isAlive = true
-        inputHighlightRows = []
         let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
         var env = ProcessInfo.processInfo.environment
         env["TERM"] = "xterm-256color"
@@ -125,6 +107,12 @@ final class TerminalSession: Identifiable {
     func terminate() {
         isAlive = false
         status = .dead
+    }
+
+    func send(text: String) {
+        guard processStarted else { return }
+        let bytes = Array(text.utf8)
+        terminalView.send(data: bytes[...])
     }
 }
 

@@ -3,7 +3,8 @@ import SwiftUI
 
 // MARK: - Data
 
-struct CmdEntry {
+struct CmdEntry: Identifiable {
+    let id = UUID()
     let cmd: String
     let args: String
     let desc: String
@@ -146,6 +147,9 @@ struct CommandLineHelpView: View {
     @Bindable var state: NookState
 
     @State private var query: String = ""
+    @State private var helpPanelHeight: CGFloat = 248
+    @State private var dragStartHeight: CGFloat = 248
+    @State private var hoveredEntryID: UUID? = nil
 
     private var t: NookTheme { state.theme }
     private var accentGreen: Color { t.accent }
@@ -203,10 +207,40 @@ struct CommandLineHelpView: View {
         .buttonStyle(.plain)
     }
 
+    // MARK: - Resize Handle
+
+    private var resizeHandle: some View {
+        ZStack {
+            Capsule()
+                .fill(t.fgMute.opacity(0.45))
+                .frame(width: 20, height: 3)
+        }
+        .frame(maxWidth: .infinity, minHeight: 12, maxHeight: 12)
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    helpPanelHeight = max(80, min(380, dragStartHeight - value.translation.height))
+                }
+                .onEnded { value in
+                    helpPanelHeight = max(80, min(380, dragStartHeight - value.translation.height))
+                    dragStartHeight = helpPanelHeight
+                }
+        )
+        .onHover { isHovering in
+            if isHovering {
+                NSCursor.resizeUpDown.set()
+            } else {
+                NSCursor.arrow.set()
+            }
+        }
+    }
+
     // MARK: - Floating Panel
 
     private var floatingPanel: some View {
         VStack(spacing: 0) {
+            resizeHandle
             searchBar
             Rectangle().fill(t.stroke1).frame(height: 0.5)
             commandList
@@ -258,17 +292,18 @@ struct CommandLineHelpView: View {
     private var commandList: some View {
         ScrollView(.vertical, showsIndicators: false) {
             LazyVStack(spacing: 0) {
-                ForEach(filteredCmds, id: \.cmd) { entry in
+                ForEach(filteredCmds) { entry in
                     cmdRow(entry)
                     Rectangle().fill(t.stroke1).frame(height: 0.5)
                 }
             }
         }
-        .frame(maxHeight: 248)
+        .frame(height: helpPanelHeight)
     }
 
     private func cmdRow(_ entry: CmdEntry) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let isHovered = hoveredEntryID == entry.id
+        return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 0) {
                 Text(entry.cmd)
                     .font(.system(size: 13, design: .monospaced))
@@ -282,11 +317,19 @@ struct CommandLineHelpView: View {
             Text(entry.desc)
                 .font(.system(size: 12))
                 .foregroundStyle(t.fgMute)
-                .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(isHovered ? t.L3 : Color.clear)
+        .contentShape(Rectangle())
+        .onHover { over in hoveredEntryID = over ? entry.id : nil }
+        .onTapGesture {
+            let text = entry.cmd + (entry.args.isEmpty ? "" : " " + entry.args)
+            state.activeSession?.send(text: text)
+            withAnimation(.easeOut(duration: 0.18)) { state.showCommandHelp = false }
+        }
+        .animation(.easeOut(duration: 0.10), value: isHovered)
     }
 }

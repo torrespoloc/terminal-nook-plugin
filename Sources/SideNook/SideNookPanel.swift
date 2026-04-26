@@ -21,7 +21,7 @@ final class SideNookPanel: NSPanel {
         isMovableByWindowBackground = true
         backgroundColor = .clear
         isOpaque = false
-        hasShadow = true
+        hasShadow = false
     }
 
     override func mouseDown(with event: NSEvent) {

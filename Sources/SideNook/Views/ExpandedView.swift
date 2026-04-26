@@ -63,13 +63,15 @@ struct ExpandedView: View {
                         .padding(.vertical, 8)
                     TerminalContainerView(session: session, isDark: state.isDark)
                         .padding(.trailing, 8)
-                        .padding(.vertical, 8)
+                        .padding(.top, 16)
+                        .padding(.bottom, 8)
                 }
             } else {
                 VStack(spacing: 0) {
                     NavBarView(state: state)
                     TerminalContainerView(session: session, isDark: state.isDark)
                         .padding(.horizontal, 8)
+                        .padding(.top, 16)
                         .padding(.bottom, 8)
                 }
             }

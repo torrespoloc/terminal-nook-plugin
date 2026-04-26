@@ -2,7 +2,7 @@
 import SwiftUI
 
 /// Hosts the active terminal session with matched inner radius.
-/// Overlays a transparent input-highlight layer and a dead-session recovery UI.
+/// Overlays a dead-session recovery UI when the shell process exits.
 struct TerminalContainerView: View {
     let session: TerminalSession
     let isDark: Bool
@@ -17,9 +17,6 @@ struct TerminalContainerView: View {
                     Divider()
                     Button("Select All") { session.terminalView.selectAll(session.terminalView) }
                 }
-
-            InputHighlightView(session: session, isDark: isDark)
-                .allowsHitTesting(false)
 
             if !session.isAlive {
                 DeadSessionOverlay(isDark: isDark) {

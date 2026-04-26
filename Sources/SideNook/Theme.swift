@@ -15,12 +15,12 @@ struct NookTheme {
     // Opacity-based layers composite over the NSPanel's clear background
     // and render as near-black. Absolute values are required.
     //
-    // L0 #0d0e11  terminal background (deepest)
+    // L0 #282a30  terminal background (deepest)
     // L1 #151720  panel shell
     // L2 #1d2030  nav bar / sidebar card
     // L3 #262a3d  settings popover / active tab
 
-    static let darkL0 = Color(red: 0.051, green: 0.055, blue: 0.067) // #0d0e11
+    static let darkL0 = Color(red: 0.157, green: 0.165, blue: 0.188) // #282a30
     static let darkL1 = Color(red: 0.082, green: 0.090, blue: 0.125) // #151720
     static let darkL2 = Color(red: 0.114, green: 0.125, blue: 0.188) // #1d2030
     static let darkL3 = Color(red: 0.149, green: 0.165, blue: 0.239) // #262a3d
@@ -58,7 +58,7 @@ struct NookTheme {
     }
 
     // ── Terminal background ───────────────────────────────────────────
-    var termBg: Color { isDark ? Color(red: 0.051, green: 0.055, blue: 0.067)
+    var termBg: Color { isDark ? Color(red: 0.157, green: 0.165, blue: 0.188)
                                : Color(red: 0.961, green: 0.961, blue: 0.957) }
 
     // ── Control colours ───────────────────────────────────────────────

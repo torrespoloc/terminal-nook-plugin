@@ -84,11 +84,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let shift = event.modifierFlags.contains(.shift)
             let chars = event.charactersIgnoringModifiers ?? ""
 
-            // Record user input rows for highlight overlay (Return = keyCode 36, numpad Enter = 76)
-            if !cmd, (event.keyCode == 36 || event.keyCode == 76) {
-                self.state.activeSession?.recordInputRow()
-            }
-
             guard cmd else { return event }
 
             switch chars {
@@ -298,7 +293,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state.panelPosition = pos
         panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
         panel.ignoresMouseEvents = false
-        panel.hasShadow = true
         isUpdatingFrame = false
         // State flip happens after frame — SwiftUI renders ExpandedView into the correct size.
         state.expand()
@@ -308,7 +302,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func collapse() {
         guard state.isExpanded else { return }
         panel.resignKey()
-        panel.hasShadow = false
         // State flip first — SwiftUI immediately shows PillView.
         // Frame shrinks after, so PillView renders at the correct pill size from the start.
         state.collapse()
@@ -352,11 +345,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state.panelPosition = pos
             panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
             panel.ignoresMouseEvents = false
-            panel.hasShadow = true
             panel.makeKey()
         } else {
             panel.resignKey()
-            panel.hasShadow = false
             let pillSize = pillDimensions(for: state.dockedEdge)
             let pos = pillOrigin(screenFrame: screenFrame)
             state.panelPosition = pos

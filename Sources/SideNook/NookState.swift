@@ -86,13 +86,13 @@ final class NookState {
         case .leftSidebar:
             // HStack padding: leading 8, trailing 8 | SidebarNavView: width 180, HStack spacing 6
             let w = expandedSize.width - 8 - 180 - 6 - 8   // width - 202
-            let h = expandedSize.height - 8 - 8              // height - 16
+            let h = expandedSize.height - 16 - 8             // height - 24 (top 16 + bottom 8)
             return CGSize(width: max(w, 100), height: max(h, 100))
         case .topBar:
             // NavBarView total vertical: 40 frame + 8 top pad + 6 bottom pad = 54
-            // Terminal: .padding(.horizontal, 8) + .padding(.bottom, 8)
-            let w = expandedSize.width - 8 - 8    // width - 16
-            let h = expandedSize.height - 54 - 8  // height - 62
+            // Terminal: .padding(.horizontal, 8) + .padding(.top, 16) + .padding(.bottom, 8)
+            let w = expandedSize.width - 8 - 8         // width - 16
+            let h = expandedSize.height - 54 - 16 - 8  // height - 78 (NavBar 54 + top 16 + bottom 8)
             return CGSize(width: max(w, 100), height: max(h, 100))
         }
     }

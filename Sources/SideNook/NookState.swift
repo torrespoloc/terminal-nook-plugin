@@ -103,7 +103,7 @@ final class NookState {
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let frame = screen.visibleFrame
         // Default: top edge, pill centered horizontally
-        let centerOffset = frame.midX - 60  // 60 = pillHeight/2
+        let centerOffset = frame.midX - 19  // 19 = pillHeight/2
         self.panelPosition = CGPoint(x: centerOffset, y: frame.maxY - 6)
         self.pillEdgeOffset = centerOffset
         // Create one default session

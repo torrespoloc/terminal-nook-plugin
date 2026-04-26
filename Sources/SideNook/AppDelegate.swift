@@ -6,8 +6,8 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     enum Constants {
-        static let pillWidth: CGFloat = 6
-        static let pillHeight: CGFloat = 120
+        static let pillWidth: CGFloat = 4
+        static let pillHeight: CGFloat = 38
         static let hitTestDepth: CGFloat = 20
     }
 

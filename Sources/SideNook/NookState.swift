@@ -74,6 +74,46 @@ final class NookState {
     var activeSessionID: UUID?
     private var sessionCounter: Int = 0
 
+    // MARK: - Session Snapshot Persistence
+
+    private struct SessionSnapshot: Codable {
+        var title: String
+        var directory: String?
+    }
+
+    private static let snapshotsKey = "SideNook.sessionSnapshots"
+
+    /// Saves current session titles and directories to UserDefaults.
+    func saveSessionSnapshots() {
+        let snapshots = sessions.map { SessionSnapshot(title: $0.title, directory: $0.currentDirectory) }
+        if let data = try? JSONEncoder().encode(snapshots) {
+            UserDefaults.standard.set(data, forKey: Self.snapshotsKey)
+        }
+    }
+
+    /// Replaces the default empty session with restored sessions from the last run.
+    /// Called from `init` — must run before the default `createSession()`.
+    private func restoreSessionSnapshots() {
+        guard let data = UserDefaults.standard.data(forKey: Self.snapshotsKey),
+              let snapshots = try? JSONDecoder().decode([SessionSnapshot].self, from: data),
+              !snapshots.isEmpty
+        else { return }
+
+        for snapshot in snapshots {
+            sessionCounter += 1
+            let session = TerminalSession(
+                index: sessionCounter,
+                fontSize: fontSize,
+                appearance: appearance,
+                initialSize: terminalContentSize(for: tabLayout)
+            )
+            session.title = snapshot.title
+            session.restoreDirectory = snapshot.directory
+            sessions.append(session)
+        }
+        activeSessionID = sessions.first?.id
+    }
+
     enum SessionStatus {
         case idle   // shell running but user has not typed yet
         case live   // user has typed at least one character
@@ -123,8 +163,9 @@ final class NookState {
         let centerOffset = frame.midX - 76  // 76 = pillHeight/2
         self.panelPosition = CGPoint(x: centerOffset, y: frame.maxY - 6)
         self.pillEdgeOffset = centerOffset
-        // Create one default session
-        let _ = createSession()
+        // Restore previous sessions, or create a fresh one if none saved.
+        restoreSessionSnapshots()
+        if sessions.isEmpty { createSession() }
     }
 
     func expand() {

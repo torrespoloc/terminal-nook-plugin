@@ -11,11 +11,11 @@ struct PillView: View {
     private static let fill   = Color.black.opacity(0.96)
     private static let border = Color.white.opacity(0.10)
 
-    private var statusKind: (color: Color, isAttn: Bool)? {
+    private var statusKind: (color: Color, isAttn: Bool) {
         let statuses = state.sessions.map(\.status)
         if statuses.contains(.attn) { return (state.theme.dotAttn, true) }
         if statuses.contains(.live) { return (state.theme.dotLive, false) }
-        return nil
+        return (state.theme.dotIdle, false)
     }
 
     /// 240pt radius on the side opposite the docked edge; 0pt on the edge-facing side.
@@ -68,26 +68,25 @@ struct PillView: View {
 
     @ViewBuilder
     private var statusDot: some View {
-        if let kind = statusKind {
-            let isVertical = state.dockedEdge == .left || state.dockedEdge == .right
-            // Stripe runs along the pill's long axis: 6pt across × 16pt along.
-            let w: CGFloat = isVertical ? 6 : 16
-            let h: CGFloat = isVertical ? 16 : 6
-            Capsule()
-                .fill(kind.color)
-                .frame(width: w, height: h)
-                .opacity(kind.isAttn && pulse ? 0.35 : 1)
-                .animation(
-                    kind.isAttn
-                        ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true)
-                        : .default,
-                    value: pulse
-                )
-                .frame(maxWidth: .infinity, maxHeight: .infinity,
-                       alignment: isVertical ? .bottom : .trailing)
-                .padding(isVertical ? .bottom : .trailing, 6)
-                .onAppear { if kind.isAttn { pulse = true } }
-                .onChange(of: kind.isAttn) { _, attn in pulse = attn }
-        }
+        let kind = statusKind
+        let isVertical = state.dockedEdge == .left || state.dockedEdge == .right
+        // Stripe runs along the pill's long axis: 6pt across × 16pt along.
+        let w: CGFloat = isVertical ? 6 : 16
+        let h: CGFloat = isVertical ? 16 : 6
+        Capsule()
+            .fill(kind.color)
+            .frame(width: w, height: h)
+            .opacity(kind.isAttn && pulse ? 0.35 : 1)
+            .animation(
+                kind.isAttn
+                    ? .easeInOut(duration: 0.9).repeatForever(autoreverses: true)
+                    : .default,
+                value: pulse
+            )
+            .frame(maxWidth: .infinity, maxHeight: .infinity,
+                   alignment: isVertical ? .bottom : .trailing)
+            .padding(isVertical ? .bottom : .trailing, 6)
+            .onAppear { if kind.isAttn { pulse = true } }
+            .onChange(of: kind.isAttn) { _, attn in pulse = attn }
     }
 }

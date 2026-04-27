@@ -18,6 +18,14 @@ final class TerminalSession: Identifiable {
     private let coordinator: SessionCoordinator
     private(set) var processStarted = false
 
+    /// Last known working directory — updated by the shell via OSC 7.
+    /// Persisted on quit and used to restore the session on next launch.
+    var currentDirectory: String?
+
+    /// When set before `startProcessIfNeeded()`, the shell will `cd` here
+    /// after it starts. Consumed on first use.
+    var restoreDirectory: String?
+
     // MARK: - ANSI Color Palettes (matching Terminal.app)
 
     private static func c(_ r: UInt16, _ g: UInt16, _ b: UInt16) -> SwiftTerm.Color {
@@ -72,6 +80,16 @@ final class TerminalSession: Identifiable {
         env["COLORTERM"] = "truecolor"
         let envArray = env.map { "\($0.key)=\($0.value)" }
         terminalView.startProcess(executable: shell, args: ["-l"], environment: envArray)
+
+        if let dir = restoreDirectory {
+            restoreDirectory = nil
+            // Wait for the shell to finish initialising before sending the cd.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
+                guard let self, isAlive else { return }
+                let bytes = Array("cd \(dir)\n".utf8)
+                terminalView.send(data: bytes[...])
+            }
+        }
     }
 
     private func configureView(fontSize: CGFloat, appearance: NookState.Appearance) {
@@ -212,6 +230,7 @@ final class SessionCoordinator: @unchecked Sendable, LocalProcessTerminalViewDel
     nonisolated func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {
         Task { @MainActor [weak self] in
             guard let self, let session = self.session, let dir = directory else { return }
+            session.currentDirectory = dir
             let name = (dir as NSString).lastPathComponent
             if !name.isEmpty {
                 session.title = name

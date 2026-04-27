@@ -86,6 +86,7 @@ struct NookTheme {
                                 : Color.red.opacity(0.80) }
 
     // ── Status dots ───────────────────────────────────────────────────
+    var dotIdle: Color { isDark ? Color(white: 1.0, opacity: 0.22) : Color(white: 0.0, opacity: 0.18) }
     var dotLive: Color { Color(red: 0.21,  green: 0.82,  blue: 0.50) }
     var dotAttn: Color { Color(red: 0.95,  green: 0.71,  blue: 0.18) }
     var dotDead: Color { Color(red: 0.973, green: 0.443, blue: 0.443, opacity: 0.60) }

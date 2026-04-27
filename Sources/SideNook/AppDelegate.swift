@@ -529,6 +529,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let globalHotkeyMonitor { NSEvent.removeMonitor(globalHotkeyMonitor) }
         for obs in keyObservers { NotificationCenter.default.removeObserver(obs) }
         statusPollTimer?.invalidate()
+        state.saveSessionSnapshots()
         for session in state.sessions { session.terminate() }
     }
 }

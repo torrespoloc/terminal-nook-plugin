@@ -57,7 +57,7 @@ struct ShortcutsListView: View {
 
             Text("System text shortcuts also apply — three-finger drag, double-tap select, and any custom Accessibility Pointer shortcuts you've configured in System Settings.")
                 .font(.system(size: 11))
-                .foregroundStyle(fgMuted.opacity(0.7))
+                .foregroundStyle(fgMuted.opacity(0.4))
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)

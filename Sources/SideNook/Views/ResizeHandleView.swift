@@ -91,6 +91,27 @@ final class ResizeHandleNSView: NSView {
             newOriginY = startOrigin.y + (startSize.height - newHeight)
         }
 
+        // Constrain to screen visible frame so the panel can't extend behind menubar/dock
+        if let screen = window.screen {
+            let vf = screen.visibleFrame
+            switch edge {
+            case .right:
+                newWidth = min(newWidth, vf.maxX - newOriginX)
+            case .left:
+                let rightEdge = startOrigin.x + startSize.width
+                newOriginX = max(newOriginX, vf.minX)
+                newWidth = rightEdge - newOriginX
+            case .top:
+                newHeight = min(newHeight, vf.maxY - newOriginY)
+            case .bottom:
+                let topEdge = startOrigin.y + startSize.height
+                newOriginY = max(newOriginY, vf.minY)
+                newHeight = topEdge - newOriginY
+            }
+            newWidth = min(max(newWidth, NookState.minExpandedSize.width), NookState.maxExpandedSize.width)
+            newHeight = min(max(newHeight, NookState.minExpandedSize.height), NookState.maxExpandedSize.height)
+        }
+
         state.expandedSize = CGSize(width: newWidth, height: newHeight)
         state.panelPosition = CGPoint(x: newOriginX, y: newOriginY)
         window.setFrame(

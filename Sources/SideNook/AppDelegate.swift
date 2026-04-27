@@ -124,8 +124,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.terminalView.paste(session.terminalView)
                 }
                 return nil
-            // Cmd+C is NOT intercepted — SwiftTerm copies selected text natively.
-            // Use Ctrl+C (delivered through the PTY) to interrupt a running process.
+            case "c":
+                if let session = self.state.activeSession {
+                    session.terminalView.copy(session.terminalView)
+                }
+                return nil
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 if let num = Int(chars) {
                     let index = num - 1

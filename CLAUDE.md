@@ -117,6 +117,6 @@ Handled via a local `NSEvent` monitor (`keyCode`-based, not character-based):
 - Do not call `startProcess` directly — always use `startProcessIfNeeded()`.
 - Do not add `hasShadow = true` — the system shadow is intentionally off; SwiftUI shadow is sole source.
 - Do not use `.lineLimit` on help text in popovers — descriptions must wrap freely.
-- Do not intercept `Cmd+C` — SwiftTerm handles copy natively; `Ctrl+C` interrupts through the PTY.
+- `Cmd+C` is explicitly intercepted in AppDelegate and calls `terminalView.copy()` — same pattern as paste. `Ctrl+C` interrupts through the PTY.
 - Do not store session references outside `NookState.sessions` — session lifecycle is managed there.
 - Do not reuse `nodeIds` or session IDs across app launches.

@@ -29,7 +29,6 @@ struct SettingsPopoverView: View {
         ("Amber",          "#f0b429"),
         ("Ice",            "#6ec1ff"),
         ("Magenta",        "#e05a9b"),
-        ("Classic",        "#4ade80"),
     ]
 
     var body: some View {
@@ -48,13 +47,12 @@ struct SettingsPopoverView: View {
                                 .font(.system(size: 14))
                                 .foregroundStyle(fg)
                         }
-                        HStack(spacing: 6) {
+                        HStack(spacing: 5) {
                             ForEach(accentPresets, id: \.hex) { preset in
                                 accentSwatchButton(hex: preset.hex, name: preset.name)
                             }
                             customAccentSwatch
                         }
-                        .padding(.leading, 20)
                     }
                     .padding(12)
                 }
@@ -130,7 +128,6 @@ struct SettingsPopoverView: View {
                                 .buttonStyle(.plain)
                             }
                         }
-                        .padding(.leading, 24)
                     }
                     .padding(12)
 
@@ -226,8 +223,9 @@ struct SettingsPopoverView: View {
                 }
             }
             .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(width: 260)
+        .frame(width: 280)
         .frame(maxHeight: 520)
         .background(bg)
     }
@@ -238,6 +236,7 @@ struct SettingsPopoverView: View {
         VStack(spacing: 0) {
             content()
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(cardBg)
@@ -313,25 +312,26 @@ struct SettingsPopoverView: View {
         return Button(action: { state.accentHex = hex }) {
             ZStack {
                 if isSelected {
-                    Circle()
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(color, lineWidth: 1.5)
-                        .frame(width: 32, height: 32)
-                    Circle()
-                        .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 40, height: 24)
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(bg, lineWidth: 2)
+                        .frame(width: 37, height: 21)
                 }
-                Circle()
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .fill(color)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 34, height: 18)
                     .overlay(
                         Group {
                             if !isSelected {
-                                Circle().strokeBorder(t.stroke3, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                    .strokeBorder(t.stroke3, lineWidth: 0.5)
                             }
                         }
                     )
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 40, height: 24)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Accent: \(name)")
@@ -344,30 +344,30 @@ struct SettingsPopoverView: View {
             // Visual layer — non-interactive
             ZStack {
                 if isCustomAccent {
-                    Circle()
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .strokeBorder(currentColor, lineWidth: 1.5)
-                        .frame(width: 32, height: 32)
-                    Circle()
-                        .strokeBorder(t.L0, lineWidth: 2)
-                        .frame(width: 28, height: 28)
+                        .frame(width: 40, height: 24)
+                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        .strokeBorder(bg, lineWidth: 2)
+                        .frame(width: 37, height: 21)
                 }
-                Circle()
+                RoundedRectangle(cornerRadius: 4, style: .continuous)
                     .fill(currentColor)
-                    .frame(width: 24, height: 24)
+                    .frame(width: 34, height: 18)
                     .overlay(
-                        Circle()
+                        RoundedRectangle(cornerRadius: 4, style: .continuous)
                             .strokeBorder(t.fgMute, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
                     )
             }
-            .frame(width: 32, height: 32)
+            .frame(width: 40, height: 24)
             .allowsHitTesting(false)
 
             // Transparent NSColorWell — provides click-to-open-color-panel
             TransparentColorWell(color: accentBinding)
-                .frame(width: 32, height: 32)
+                .frame(width: 40, height: 24)
                 .opacity(0)
         }
-        .frame(width: 32, height: 32)
+        .frame(width: 40, height: 24)
         .accessibilityLabel("Accent: Custom color")
         .accessibilityAddTraits(isCustomAccent ? .isSelected : [])
     }

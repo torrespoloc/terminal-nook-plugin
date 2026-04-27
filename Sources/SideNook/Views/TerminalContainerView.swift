@@ -22,9 +22,60 @@ struct TerminalContainerView: View {
                 DeadSessionOverlay(isDark: isDark) {
                     session.restart()
                 }
+            } else {
+                ScrollButtons(session: session, isDark: isDark)
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+}
+
+// MARK: - Scroll Buttons
+
+private struct ScrollButtons: View {
+    let session: TerminalSession
+    let isDark: Bool
+
+    @State private var isHovered = false
+
+    private var buttonBg: Color {
+        isDark ? Color.black.opacity(0.55) : Color.white.opacity(0.75)
+    }
+    private var buttonHoverBg: Color {
+        isDark ? Color.black.opacity(0.75) : Color.white.opacity(0.92)
+    }
+    private var iconColor: Color {
+        isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.60)
+    }
+
+    var body: some View {
+        VStack(spacing: 1) {
+            scrollBtn(systemName: "chevron.up") {
+                session.terminalView.scrollUp(lines: 3)
+            }
+            scrollBtn(systemName: "chevron.down") {
+                session.terminalView.scrollDown(lines: 3)
+            }
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .fill(isHovered ? buttonHoverBg : buttonBg)
+                .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
+        )
+        .onHover { isHovered = $0 }
+        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+        .allowsHitTesting(true)
+    }
+
+    private func scrollBtn(systemName: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(iconColor)
+                .frame(width: 22, height: 18)
+        }
+        .buttonStyle(.plain)
     }
 }
 

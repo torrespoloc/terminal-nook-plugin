@@ -100,13 +100,16 @@ struct NavBarView: View {
                     fgActive: t.fg,
                     isDark: state.isDark
                 ) {
-                    state.showCommandHelp.toggle()
+                    if state.canTogglePopover() { state.showCommandHelp.toggle() }
                 }
                 .help("Command Line Help")
                 .popover(
                     isPresented: Binding(
                         get: { state.showCommandHelp },
-                        set: { state.showCommandHelp = $0 }
+                        set: { newValue in
+                            if !newValue && state.showCommandHelp { state.notePopoverDismissed() }
+                            state.showCommandHelp = newValue
+                        }
                     ),
                     attachmentAnchor: .point(.bottom),
                     arrowEdge: .top
@@ -121,13 +124,16 @@ struct NavBarView: View {
                     fgActive: t.fg,
                     isDark: state.isDark
                 ) {
-                    state.showSettings.toggle()
+                    if state.canTogglePopover() { state.showSettings.toggle() }
                 }
                 .help("Settings")
                 .popover(
                     isPresented: Binding(
                         get: { state.showSettings },
-                        set: { state.showSettings = $0 }
+                        set: { newValue in
+                            if !newValue && state.showSettings { state.notePopoverDismissed() }
+                            state.showSettings = newValue
+                        }
                     ),
                     attachmentAnchor: .point(.bottom),
                     arrowEdge: .top

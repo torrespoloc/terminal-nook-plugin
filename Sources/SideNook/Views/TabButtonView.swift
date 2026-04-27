@@ -1,6 +1,12 @@
 // Sources/SideNook/Views/TabButtonView.swift
 import SwiftUI
 
+extension String {
+    func truncated(to limit: Int) -> String {
+        count > limit ? prefix(limit) + "…" : self
+    }
+}
+
 struct TabButtonView: View {
     let session: TerminalSession
     let isActive: Bool
@@ -73,7 +79,7 @@ struct TabButtonView: View {
                         }
                 }
 
-                Text(session.title)
+                Text(session.title.truncated(to: 22))
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .fixedSize(horizontal: true, vertical: false)

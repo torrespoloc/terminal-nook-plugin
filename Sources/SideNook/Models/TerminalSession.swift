@@ -24,12 +24,14 @@ final class TerminalSession: Identifiable {
         SwiftTerm.Color(red: r * 257, green: g * 257, blue: b * 257)
     }
 
-    /// Dark mode palette — matches macOS Terminal.app "Basic" profile
+    /// Dark mode palette — matches macOS Terminal.app "Basic" profile.
+    /// Blues (index 4, 12) are lightened from the original so they remain readable
+    /// when highlighted against the dark selection background.
     private static let darkPalette: [SwiftTerm.Color] = [
         c(0,   0,   0),     c(194, 54,  33),    c(37,  188, 36),    c(173, 173, 39),
-        c(73,  46,  225),   c(211, 56,  211),   c(51,  187, 200),   c(203, 204, 205),
+        c(100, 140, 255),   c(211, 56,  211),   c(51,  187, 200),   c(203, 204, 205),
         c(129, 131, 131),   c(252, 57,  31),    c(49,  231, 34),    c(234, 236, 35),
-        c(88,  51,  255),   c(249, 53,  248),   c(20,  240, 240),   c(233, 235, 235),
+        c(130, 180, 255),   c(249, 53,  248),   c(20,  240, 240),   c(233, 235, 235),
     ]
 
     /// Light mode palette — desaturated for readability on light backgrounds
@@ -81,17 +83,19 @@ final class TerminalSession: Identifiable {
         applyAppearance(appearance)
     }
 
-    func applyAppearance(_ appearance: NookState.Appearance, selectionColor: NSColor = NSColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 0.35)) {
+    func applyAppearance(_ appearance: NookState.Appearance) {
         switch appearance {
         case .dark:
             terminalView.nativeBackgroundColor = NSColor(red: 0.114, green: 0.118, blue: 0.141, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
-            terminalView.selectedTextBackgroundColor = selectionColor
+            // Dark mode: keep same steel-blue highlight; blues in darkPalette are lightened for contrast.
+            terminalView.selectedTextBackgroundColor = NSColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 0.35)
             terminalView.installColors(Self.darkPalette)
         case .light:
             terminalView.nativeBackgroundColor = NSColor(red: 0.961, green: 0.961, blue: 0.957, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1)
-            terminalView.selectedTextBackgroundColor = selectionColor
+            // Light mode: baby blue selection matching default macOS terminal highlight.
+            terminalView.selectedTextBackgroundColor = NSColor(red: 0.60, green: 0.78, blue: 0.98, alpha: 0.65)
             terminalView.installColors(Self.lightPalette)
         }
     }
@@ -133,8 +137,12 @@ final class TerminalSession: Identifiable {
     /// terminal buffer. Patterns are conservative on purpose — we want zero
     /// false positives while shells are running normally.
     private static let attnPatterns: [String] = [
-        // Claude Code numbered selector — ❯ marks the highlighted choice.
-        "❯ 1.", "❯ 2.",
+        // Claude Code numbered selector — ❯ marks whichever option is highlighted.
+        // Cover 1–9 so any selected position triggers the dot.
+        "❯ 1.", "❯ 2.", "❯ 3.", "❯ 4.", "❯ 5.",
+        "❯ 6.", "❯ 7.", "❯ 8.", "❯ 9.",
+        // Claude Code footer present on every tool-approval / proceed prompt.
+        "esc to cancel",
         // Generic confirmation prompts.
         "[y/n]", "[y/n]?", "(y/n)", "(yes/no)",
         // Sudo and password prompts.

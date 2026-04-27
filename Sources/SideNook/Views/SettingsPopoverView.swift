@@ -191,10 +191,16 @@ struct SettingsPopoverView: View {
                     sectionDivider
 
                     settingsRow(icon: "info.circle", label: "About SideNook", showChevron: true) {
-                        state.showAbout.toggle()
+                        if state.canTogglePopover() { state.showAbout.toggle() }
                     }
                     .popover(
-                        isPresented: Binding(get: { state.showAbout }, set: { state.showAbout = $0 }),
+                        isPresented: Binding(
+                            get: { state.showAbout },
+                            set: { newValue in
+                                if !newValue && state.showAbout { state.notePopoverDismissed() }
+                                state.showAbout = newValue
+                            }
+                        ),
                         arrowEdge: .leading
                     ) {
                         AboutView(isDark: state.isDark) { state.showAbout = false }

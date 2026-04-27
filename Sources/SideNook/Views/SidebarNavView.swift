@@ -48,11 +48,17 @@ struct SidebarNavView: View {
                 .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
 
                 sidebarButton(icon: "gearshape", isOn: state.showSettings) {
-                    state.showSettings.toggle()
+                    if state.canTogglePopover() { state.showSettings.toggle() }
                 }
                 .help("Settings")
                 .popover(
-                    isPresented: Binding(get: { state.showSettings }, set: { state.showSettings = $0 }),
+                    isPresented: Binding(
+                        get: { state.showSettings },
+                        set: { newValue in
+                            if !newValue && state.showSettings { state.notePopoverDismissed() }
+                            state.showSettings = newValue
+                        }
+                    ),
                     attachmentAnchor: .point(.topTrailing),
                     arrowEdge: .trailing
                 ) {
@@ -203,7 +209,7 @@ private struct SidebarTabRow: View {
                         }
                 }
 
-                Text(session.title)
+                Text(session.title.truncated(to: 22))
                     .font(.system(size: 13, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .fixedSize(horizontal: true, vertical: false)

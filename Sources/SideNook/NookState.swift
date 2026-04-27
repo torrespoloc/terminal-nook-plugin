@@ -53,6 +53,22 @@ final class NookState {
     var reduceMotion: Bool = false
     var showCommandHelp: Bool = false
 
+    /// Timestamp of the most recent popover auto-dismiss. Used to debounce the
+    /// trigger button: AppKit treats a click on the anchor button as "outside"
+    /// the popover, dismissing it, and SwiftUI then delivers the same click to
+    /// the Button — without this guard the action toggles the popover back on,
+    /// requiring a double-click to actually close it.
+    @ObservationIgnored
+    private var lastPopoverDismiss: Date = .distantPast
+
+    func canTogglePopover() -> Bool {
+        Date().timeIntervalSince(lastPopoverDismiss) >= 0.25
+    }
+
+    func notePopoverDismissed() {
+        lastPopoverDismiss = Date()
+    }
+
     // Tab/session management
     var sessions: [TerminalSession] = []
     var activeSessionID: UUID?

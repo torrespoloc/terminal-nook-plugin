@@ -72,11 +72,9 @@ final class ResizeHandleNSView: NSView {
             newWidth = startSize.width + dx
         case .left:
             newWidth = startSize.width - dx
-            newOriginX = startOrigin.x + dx
         case .bottom:
             // In macOS coords, bottom means lower y = subtract dy
             newHeight = startSize.height - dy
-            newOriginY = startOrigin.y + dy
         case .top:
             newHeight = startSize.height + dy
         }
@@ -85,7 +83,7 @@ final class ResizeHandleNSView: NSView {
         newWidth = min(max(newWidth, NookState.minExpandedSize.width), NookState.maxExpandedSize.width)
         newHeight = min(max(newHeight, NookState.minExpandedSize.height), NookState.maxExpandedSize.height)
 
-        // Recompute origin if clamped
+        // Keep opposite edge fixed: shift origin by how much width/height changed
         if edge == .left {
             newOriginX = startOrigin.x + (startSize.width - newWidth)
         }

@@ -134,6 +134,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.send(text: "\u{1f}")
                 }
                 return nil
+            case "q":
+                NSApp.terminate(nil)
+                return nil
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 if let num = Int(chars) {
                     let index = num - 1

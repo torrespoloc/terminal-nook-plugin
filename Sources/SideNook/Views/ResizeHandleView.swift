@@ -49,6 +49,7 @@ final class ResizeHandleNSView: NSView {
         dragStartPoint = NSEvent.mouseLocation
         dragStartSize = state?.expandedSize
         dragStartOrigin = window?.frame.origin
+        super.mouseDown(with: event)
     }
 
     override func mouseDragged(with event: NSEvent) {
@@ -100,11 +101,13 @@ final class ResizeHandleNSView: NSView {
             display: true,
             animate: false
         )
+        super.mouseDragged(with: event)
     }
 
     override func mouseUp(with event: NSEvent) {
         dragStartPoint = nil
         dragStartSize = nil
         dragStartOrigin = nil
+        super.mouseUp(with: event)
     }
 }

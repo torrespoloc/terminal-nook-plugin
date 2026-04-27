@@ -59,8 +59,9 @@ final class NookState {
     private var sessionCounter: Int = 0
 
     enum SessionStatus {
-        case live   // shell running normally
-        case attn   // waiting for user input (sudo, confirmation)
+        case idle   // shell running but user has not typed yet
+        case live   // user has typed at least one character
+        case attn   // agent is waiting for user input (e.g. Claude Code prompt)
         case dead   // process exited
     }
 

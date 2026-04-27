@@ -17,6 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var moveObserver: NSObjectProtocol?
     private var keyMonitor: Any?
     private var globalHotkeyMonitor: Any?
+    private var statusPollTimer: Timer?
     private var statusItem: NSStatusItem?
     private var keyObservers: [NSObjectProtocol] = []
     /// Guards against circular updates: setFrame → didMove → applyStateChange → setFrame
@@ -84,6 +85,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let shift = event.modifierFlags.contains(.shift)
             let chars = event.charactersIgnoringModifiers ?? ""
 
+            // Any keystroke that reaches the terminal (i.e. not consumed as a
+            // Cmd-shortcut below) counts as user input — flip the active
+            // session from .idle → .live so its dot turns green.
+            if !cmd, event.window === self.panel {
+                self.state.activeSession?.markUserInput()
+                return event
+            }
             guard cmd else { return event }
 
             switch chars {
@@ -195,6 +203,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         startObservingState()
         startObservingWindowFocus()
+        startStatusPolling()
+    }
+
+    /// Polls each session's terminal buffer to drive the `.attn` (yellow dot)
+    /// state. Runs on the main runloop in `.common` mode so it keeps firing
+    /// during scrolls and drags. Cheap — reads at most ~24 visible rows per
+    /// session and only writes `status` when it actually changes.
+    private func startStatusPolling() {
+        let timer = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                for session in self.state.sessions {
+                    session.refreshStatusFromBuffer()
+                }
+            }
+        }
+        RunLoop.main.add(timer, forMode: .common)
+        statusPollTimer = timer
     }
 
     // MARK: - Status Bar Item
@@ -502,6 +528,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
         if let globalHotkeyMonitor { NSEvent.removeMonitor(globalHotkeyMonitor) }
         for obs in keyObservers { NotificationCenter.default.removeObserver(obs) }
+        statusPollTimer?.invalidate()
         for session in state.sessions { session.terminate() }
     }
 }

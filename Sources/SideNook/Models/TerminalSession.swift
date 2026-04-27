@@ -9,11 +9,12 @@ final class TerminalSession: Identifiable {
     let id = UUID()
     var title: String
     var isAlive: Bool = true
-    var status: NookState.SessionStatus = .live
+    var status: NookState.SessionStatus = .idle
+    private(set) var hasTyped: Bool = false
     let screenName: String
     let isExternal: Bool = false
 
-    let terminalView: LocalProcessTerminalView
+    let terminalView: SideNookTerminalView
     private let coordinator: SessionCoordinator
     private(set) var processStarted = false
 
@@ -46,7 +47,7 @@ final class TerminalSession: Identifiable {
         self.screenName = name
         self.title = "Terminal \(index)"
         self.coordinator = SessionCoordinator()
-        self.terminalView = LocalProcessTerminalView(
+        self.terminalView = SideNookTerminalView(
             frame: NSRect(origin: .zero, size: initialSize)
         )
 
@@ -113,10 +114,75 @@ final class TerminalSession: Identifiable {
 
     func send(text: String) {
         guard processStarted else { return }
+        markUserInput()
         let bytes = Array(text.utf8)
         terminalView.send(data: bytes[...])
     }
+
+    /// Promote `.idle` → `.live` on first sign of user input. Keeps `.attn`
+    /// and `.dead` intact so detectors and lifecycle states aren't clobbered.
+    func markUserInput() {
+        hasTyped = true
+        if status == .idle { status = .live }
+    }
+
+    // MARK: - Attention detection
+
+    /// Substrings that indicate the session is blocking on user input.
+    /// Matched case-insensitively against the bottom slice of the visible
+    /// terminal buffer. Patterns are conservative on purpose — we want zero
+    /// false positives while shells are running normally.
+    private static let attnPatterns: [String] = [
+        // Claude Code numbered selector — ❯ marks the highlighted choice.
+        "❯ 1.", "❯ 2.",
+        // Generic confirmation prompts.
+        "[y/n]", "[y/n]?", "(y/n)", "(yes/no)",
+        // Sudo and password prompts.
+        "password:", "password for ",
+        // Common "press to continue" prompts.
+        "press enter to continue", "press any key to continue",
+    ]
+
+    /// Number of bottom rows scanned for an attention prompt. The active
+    /// prompt always sits near the cursor, so we don't need the whole buffer.
+    private static let attnScanRows: Int = 24
+
+    /// Recomputes `status` from the current terminal buffer. Called periodically
+    /// by `NookState`'s status poller while sessions are alive.
+    /// - Order of precedence: `.dead` (sticky) → `.attn` (prompt detected) →
+    ///   `.live` (user has typed) → `.idle`.
+    func refreshStatusFromBuffer() {
+        guard status != .dead else { return }
+        let detected = detectAttentionPrompt()
+        let next: NookState.SessionStatus
+        if detected            { next = .attn }
+        else if hasTyped       { next = .live }
+        else                   { next = .idle }
+        if status != next { status = next }
+    }
+
+    private func detectAttentionPrompt() -> Bool {
+        let term = terminalView.getTerminal()
+        let total = term.rows
+        guard total > 0 else { return false }
+        let scan = min(total, Self.attnScanRows)
+        let start = total - scan
+        var blob = ""
+        for r in start..<total {
+            guard let line = term.getLine(row: r) else { continue }
+            blob += line.translateToString(trimRight: true)
+            blob += "\n"
+        }
+        let lower = blob.lowercased()
+        return Self.attnPatterns.contains { lower.contains($0.lowercased()) }
+    }
 }
+
+/// Type alias kept so the rest of the app can refer to a SideNook-owned name
+/// while we still get full SwiftTerm behavior. First-keystroke detection is
+/// handled by AppDelegate's local key monitor (SwiftTerm's `keyDown` is not
+/// `open`, so we cannot subclass-override it from outside the module).
+typealias SideNookTerminalView = LocalProcessTerminalView
 
 // MARK: - Session Coordinator
 

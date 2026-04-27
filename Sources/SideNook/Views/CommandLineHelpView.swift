@@ -147,12 +147,14 @@ private let allCmds: [CmdEntry] = [
 struct CommandLineHelpView: View {
     @Bindable var state: NookState
 
+    var showsTrigger: Bool = true
+
     @State private var query: String = ""
     @State private var helpPanelHeight: CGFloat = 248
     @State private var hoveredEntryID: UUID? = nil
 
     private var t: NookTheme { state.theme }
-    private var accentGreen: Color { t.accent }
+    private var accentGreen: Color { t.accentReadable }
 
     private var filteredCmds: [CmdEntry] {
         if query.isEmpty { return allCmds }
@@ -163,14 +165,20 @@ struct CommandLineHelpView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            if state.showCommandHelp {
+        Group {
+            if showsTrigger {
+                VStack(spacing: 0) {
+                    if state.showCommandHelp {
+                        floatingPanel
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .zIndex(10)
+                    }
+                    Rectangle().fill(t.stroke1).frame(height: 0.5)
+                    triggerRow
+                }
+            } else {
                 floatingPanel
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                    .zIndex(10)
             }
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
-            triggerRow
         }
         .environment(\.colorScheme, state.isDark ? .dark : .light)
     }
@@ -191,6 +199,7 @@ struct CommandLineHelpView: View {
                 Text("Command Line Help")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(t.fgMid)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 Spacer(minLength: 0)
 

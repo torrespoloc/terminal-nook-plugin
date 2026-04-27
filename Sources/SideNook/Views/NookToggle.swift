@@ -16,7 +16,7 @@ struct NookToggle: View {
     var body: some View {
         ZStack(alignment: .leading) {
             RoundedRectangle(cornerRadius: trackCornerRadius, style: .continuous)
-                .fill(isOn ? theme.accent : theme.L1)
+                .fill(isOn ? theme.accentReadable : theme.L1)
                 .overlay(
                     Group {
                         if !isOn {

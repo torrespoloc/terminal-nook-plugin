@@ -37,6 +37,7 @@ struct TabButtonView: View {
 
     private var dotColor: Color {
         switch session.status {
+        case .idle: return .clear
         case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)  // #35d07f
         case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)  // #f0b429
         case .dead: return t.fgMute
@@ -46,34 +47,36 @@ struct TabButtonView: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 7) {
-                // Status dot
-                Circle()
-                    .fill(dotColor)
-                    .frame(width: 7, height: 7)
-                    .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 3)
-                    .opacity(session.status == .attn ? attnOpacity : 1)
-                    .onAppear {
-                        if session.status == .attn {
-                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
-                                attnOpacity = 0.25
+                // Status dot — hidden for .idle so the tab matches the pill,
+                // which only shows a dot once a session is live or needs attention.
+                if session.status != .idle {
+                    Circle()
+                        .fill(dotColor)
+                        .frame(width: 7, height: 7)
+                        .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 3)
+                        .opacity(session.status == .attn ? attnOpacity : 1)
+                        .onAppear {
+                            if session.status == .attn {
+                                withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                    attnOpacity = 0.25
+                                }
                             }
                         }
-                    }
-                    .onChange(of: session.status) { _, newStatus in
-                        if newStatus == .attn {
-                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
-                                attnOpacity = 0.25
+                        .onChange(of: session.status) { _, newStatus in
+                            if newStatus == .attn {
+                                withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                    attnOpacity = 0.25
+                                }
+                            } else {
+                                withAnimation { attnOpacity = 1 }
                             }
-                        } else {
-                            withAnimation { attnOpacity = 1 }
                         }
-                    }
+                }
 
                 Text(session.title)
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 if isHovered || isActive {
                     Spacer(minLength: 0)

@@ -94,6 +94,27 @@ struct NavBarView: View {
                 .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
 
                 NavIconButton(
+                    icon: "info.circle",
+                    isOn: state.showCommandHelp,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.showCommandHelp.toggle()
+                }
+                .help("Command Line Help")
+                .popover(
+                    isPresented: Binding(
+                        get: { state.showCommandHelp },
+                        set: { state.showCommandHelp = $0 }
+                    ),
+                    attachmentAnchor: .point(.bottom),
+                    arrowEdge: .top
+                ) {
+                    CommandLineHelpView(state: state, showsTrigger: false)
+                }
+
+                NavIconButton(
                     icon: "gearshape",
                     isOn: state.showSettings,
                     fgMuted: t.fgMute,

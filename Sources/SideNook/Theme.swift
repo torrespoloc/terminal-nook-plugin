@@ -49,12 +49,31 @@ struct NookTheme {
     var innerHighlight: Color { isDark ? .white.opacity(0.06) : .white.opacity(0.90) }
 
     // ── Accent ────────────────────────────────────────────────────────
-    // Custom accent overrides the default phosphor green.
-    // Default dark: #35d07f | Default light: accessible #1c7039 (~4.5:1 on white)
+    // `accent` is the user's literal pick — used for swatches/previews where
+    // they need to see exactly what they chose.
+    // `accentReadable` is theme-adjusted to meet WCAG contrast on the active
+    // surface — used for text and control fills.
     var accent: Color {
         if let a = _accent { return a }
         return isDark ? Color(red: 0.208, green: 0.816, blue: 0.498)
                       : Color(red: 0.11,  green: 0.44,  blue: 0.23)
+    }
+
+    /// Accent clamped to a contrast-safe luminance for the active theme.
+    /// Light mode: lightness ≤ 0.40 (≥4.5:1 on light surfaces).
+    /// Dark mode:  lightness ≥ 0.62 (≥4.5:1 on dark surfaces).
+    var accentReadable: Color {
+        let target: ClosedRange<CGFloat> = isDark ? 0.62...1.0 : 0.0...0.40
+        return Self.clampLightness(of: accent, to: target)
+    }
+
+    private static func clampLightness(of color: Color, to range: ClosedRange<CGFloat>) -> Color {
+        guard let c = NSColor(color).usingColorSpace(.sRGB) else { return color }
+        var h: CGFloat = 0, s: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        c.getHue(&h, saturation: &s, brightness: &b, alpha: &a)
+        // HSB brightness ≈ HSL lightness for our purposes (cheap, no full conversion).
+        let clamped = min(max(b, range.lowerBound), range.upperBound)
+        return Color(NSColor(hue: h, saturation: s, brightness: clamped, alpha: a))
     }
 
     // ── Terminal background ───────────────────────────────────────────

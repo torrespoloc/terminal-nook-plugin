@@ -149,8 +149,6 @@ struct CommandLineHelpView: View {
 
     @State private var query: String = ""
     @State private var helpPanelHeight: CGFloat = 248
-    @State private var dragStartHeight: CGFloat = 248
-    @State private var isDragging: Bool = false
     @State private var hoveredEntryID: UUID? = nil
 
     private var t: NookTheme { state.theme }
@@ -212,34 +210,14 @@ struct CommandLineHelpView: View {
     // MARK: - Resize Handle
 
     private var resizeHandle: some View {
-        ZStack {
-            Capsule()
-                .fill(t.fgMute.opacity(0.45))
-                .frame(width: 20, height: 4)
-        }
-        .frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
-        .background(WindowDragBlocker())
-        .contentShape(Rectangle())
-        .gesture(
-            DragGesture(minimumDistance: 1)
-                .onChanged { value in
-                    if !isDragging {
-                        isDragging = true
-                        dragStartHeight = helpPanelHeight
-                    }
-                    helpPanelHeight = max(80, min(384, dragStartHeight - value.translation.height))
-                }
-                .onEnded { _ in
-                    isDragging = false
-                }
-        )
-        .onHover { isHovering in
-            if isHovering {
-                NSCursor.resizeUpDown.set()
-            } else {
-                NSCursor.arrow.set()
+        HelpResizeHandle(panelHeight: $helpPanelHeight)
+            .frame(maxWidth: .infinity, minHeight: 16, maxHeight: 16)
+            .overlay {
+                Capsule()
+                    .fill(t.fgMute.opacity(0.45))
+                    .frame(width: 20, height: 4)
+                    .allowsHitTesting(false)
             }
-        }
     }
 
     // MARK: - Floating Panel
@@ -340,13 +318,52 @@ struct CommandLineHelpView: View {
     }
 }
 
-// MARK: - Window Drag Blocker
+// MARK: - Help Panel Resize Handle (AppKit-backed)
 
-private struct WindowDragBlocker: NSViewRepresentable {
-    func makeNSView(context: Context) -> BlockerNSView { BlockerNSView() }
-    func updateNSView(_ nsView: BlockerNSView, context: Context) {}
+private struct HelpResizeHandle: NSViewRepresentable {
+    @Binding var panelHeight: CGFloat
+
+    func makeNSView(context: Context) -> HelpResizeNSView {
+        let v = HelpResizeNSView()
+        v.onHeightChange = { context.coordinator.update(height: $0) }
+        return v
+    }
+
+    func updateNSView(_ nsView: HelpResizeNSView, context: Context) {
+        nsView.currentHeight = panelHeight
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(panelHeight: $panelHeight) }
+
+    final class Coordinator {
+        var panelHeight: Binding<CGFloat>
+        init(panelHeight: Binding<CGFloat>) { self.panelHeight = panelHeight }
+        func update(height: CGFloat) { panelHeight.wrappedValue = height }
+    }
 }
 
-private final class BlockerNSView: NSView {
+private final class HelpResizeNSView: NSView {
+    var onHeightChange: ((CGFloat) -> Void)?
+    var currentHeight: CGFloat = 248
+    private var dragStartY: CGFloat = 0
+    private var dragStartHeight: CGFloat = 0
+
     override var mouseDownCanMoveWindow: Bool { false }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .resizeUpDown)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        dragStartY = NSEvent.mouseLocation.y
+        dragStartHeight = currentHeight
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        let dy = NSEvent.mouseLocation.y - dragStartY
+        let newHeight = max(80, min(384, dragStartHeight + dy))
+        onHeightChange?(newHeight)
+    }
+
+    override func mouseUp(with event: NSEvent) {}
 }

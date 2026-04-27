@@ -145,7 +145,7 @@ final class NookState {
 
     private func applyAppearanceToAllSessions() {
         for session in sessions {
-            session.applyAppearance(appearance, selectionColor: NSColor(accentColor).withAlphaComponent(0.35))
+            session.applyAppearance(appearance)
         }
     }
 

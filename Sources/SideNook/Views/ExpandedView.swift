@@ -87,10 +87,10 @@ struct ExpandedView: View {
         if edge != .right {
             HStack { Spacer(); ResizeHandleView(edge: .right, state: state).frame(width: 12) }
         }
-        if edge != .top {
+        if edge != .bottom {
             VStack { Spacer(); ResizeHandleView(edge: .bottom, state: state).frame(height: 12) }
         }
-        if edge != .bottom {
+        if edge != .top {
             VStack { ResizeHandleView(edge: .top, state: state).frame(height: 12); Spacer() }
         }
         if edge != .left {

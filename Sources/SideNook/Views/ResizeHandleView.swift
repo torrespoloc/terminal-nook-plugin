@@ -21,6 +21,7 @@ struct ResizeHandleView: NSViewRepresentable {
     func updateNSView(_ nsView: ResizeHandleNSView, context: Context) {
         nsView.edge = edge
         nsView.state = state
+        nsView.window?.invalidateCursorRects(for: nsView)
     }
 }
 

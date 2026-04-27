@@ -98,8 +98,9 @@ Where to look first for each concern:
 | Top-bar nav | `Views/NavBarView.swift` | `NavBarView`, `NavIconButton` |
 | Left-sidebar nav | `Views/SidebarNavView.swift` | `SidebarNavView`, `SidebarTabRow` |
 | Help panel resize drag | `Views/CommandLineHelpView.swift` L212–239 | `resizeHandle`, `DragGesture` |
-| Window drag (move panel) | `Views/DragHandleView.swift` | `DragHandleView`, `mouseDownCanMoveWindow` |
-| Edge resize handles | `Views/ResizeHandleView.swift` | `ResizeHandleView`, `ResizeEdge` |
+| Window drag (move panel) | `Views/DragHandleView.swift` | `DragHandleView`, `mouseDownCanMoveWindow`; 18-line file — only enables panel move, zero resize logic |
+| Edge resize handles | `Views/ResizeHandleView.swift` | `ResizeHandleView`, `ResizeEdge` (.right/.left/.top/.bottom); `ResizeHandleNSView` owns all drag math: mouseDown captures startPoint/startSize/startOrigin, mouseDragged computes dx/dy delta from screen coords, clamps to NookState.min/maxExpandedSize, updates state.expandedSize + state.panelPosition + window.setFrame live |
+| Panel move enablement | `SideNookPanel.swift` | `isMovableByWindowBackground = true` (pairs with DragHandleView); `onDragEnd` callback fires on mouseUp; also routes focus to hit view on mouseDown |
 | Pinning | `NookState.swift` · `Views/NavBarView.swift` · `Views/SidebarNavView.swift` | `isPinned`, `togglePin()` |
 | Accent color + theming | `Theme.swift` · `NookState.swift` · `Views/SettingsPopoverView.swift` | `NookTheme.accent`, `accentHex` |
 | Terminal rendering | `Terminal/TerminalView.swift` · `Views/TerminalContainerView.swift` | `TerminalSessionView`, `TerminalWrapperView` |

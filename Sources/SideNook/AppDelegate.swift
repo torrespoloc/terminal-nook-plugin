@@ -6,8 +6,8 @@ import SwiftUI
 final class AppDelegate: NSObject, NSApplicationDelegate {
 
     enum Constants {
-        static let pillWidth: CGFloat = 4
-        static let pillHeight: CGFloat = 38
+        static let pillWidth: CGFloat = 8
+        static let pillHeight: CGFloat = 152
         static let hitTestDepth: CGFloat = 20
     }
 
@@ -191,10 +191,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            button.image = NSImage(
-                systemSymbolName: "sidebar.left",
-                accessibilityDescription: "SideNook"
-            )
+            if let url = Bundle.main.url(forResource: "MenuBarIcon", withExtension: "png"),
+               let img = NSImage(contentsOf: url) {
+                img.isTemplate = true
+                button.image = img
+            }
             button.imagePosition = .imageOnly
             button.toolTip = "SideNook"
         }

@@ -3,6 +3,9 @@
 *.app/
 *.o
 *.d
+*.dia
+*.swiftdeps
+*.swiftmodule
 
 # Xcode
 *.xcuserdata/

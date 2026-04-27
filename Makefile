@@ -10,6 +10,9 @@ build:
 	mkdir -p $(APP)/Contents/Resources
 	cp $(BINARY) $(APP)/Contents/MacOS/SideNook
 	cp Resources/Info.plist $(APP)/Contents/
+	cp Resources/AppIcon.icns $(APP)/Contents/Resources/AppIcon.icns
+	cp Resources/MenuBarIcon.png $(APP)/Contents/Resources/MenuBarIcon.png
+	cp Resources/MenuBarIcon@2x.png $(APP)/Contents/Resources/MenuBarIcon@2x.png
 
 run: build
 	open $(APP)

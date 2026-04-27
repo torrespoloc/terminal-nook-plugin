@@ -149,7 +149,8 @@ struct CommandLineHelpView: View {
 
     @State private var query: String = ""
     @State private var helpPanelHeight: CGFloat = 248
-    @GestureState private var liveDragOffset: CGFloat = 0
+    @State private var dragStartHeight: CGFloat = 248
+    @State private var isDragging: Bool = false
     @State private var hoveredEntryID: UUID? = nil
 
     private var t: NookTheme { state.theme }
@@ -221,11 +222,15 @@ struct CommandLineHelpView: View {
         .contentShape(Rectangle())
         .gesture(
             DragGesture(minimumDistance: 1)
-                .updating($liveDragOffset) { value, state, _ in
-                    state = value.translation.height
+                .onChanged { value in
+                    if !isDragging {
+                        isDragging = true
+                        dragStartHeight = helpPanelHeight
+                    }
+                    helpPanelHeight = max(80, min(384, dragStartHeight - value.translation.height))
                 }
-                .onEnded { value in
-                    helpPanelHeight = max(80, min(384, helpPanelHeight - value.translation.height))
+                .onEnded { _ in
+                    isDragging = false
                 }
         )
         .onHover { isHovering in
@@ -299,7 +304,7 @@ struct CommandLineHelpView: View {
                 }
             }
         }
-        .frame(height: max(80, min(384, helpPanelHeight - liveDragOffset)))
+        .frame(height: helpPanelHeight)
     }
 
     private func cmdRow(_ entry: CmdEntry) -> some View {

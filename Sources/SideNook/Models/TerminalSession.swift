@@ -85,10 +85,12 @@ final class TerminalSession: Identifiable {
         case .dark:
             terminalView.nativeBackgroundColor = NSColor(red: 0.114, green: 0.118, blue: 0.141, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
+            terminalView.selectedTextColor = NSColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1)
             terminalView.installColors(Self.darkPalette)
         case .light:
             terminalView.nativeBackgroundColor = NSColor(red: 0.961, green: 0.961, blue: 0.957, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1)
+            terminalView.selectedTextColor = NSColor(red: 0.08, green: 0.08, blue: 0.09, alpha: 1)
             terminalView.installColors(Self.lightPalette)
         }
     }

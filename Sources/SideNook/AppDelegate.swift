@@ -142,6 +142,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     session.send(text: "\u{1f}")
                 }
                 return nil
+            case ",":
+                if self.state.canTogglePopover() { self.state.showSettings.toggle() }
+                return nil
             case "q":
                 NSApp.terminate(nil)
                 return nil

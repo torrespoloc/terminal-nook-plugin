@@ -111,7 +111,7 @@ Where to look first for each concern:
 
 ## Keyboard shortcuts (AppDelegate)
 Handled via a local `NSEvent` monitor (`keyCode`-based, not character-based):
-`⌘T` new tab · `⌘W` close tab · `⌘[`/`⌘]` prev/next tab · `⌘1–9` jump to tab · `⌘K` clear · `⌘+`/`⌘-`/`⌘0` font size · `⌘↑`/`⌘↓` scroll line · `⌘PageUp`/`⌘PageDown` scroll page · `⌘Home`/`⌘End` buffer limits
+`⌘T` new tab · `⌘W` close tab · `⌘{`/`⌘}` prev/next tab · `⌘1–9` jump to tab · `⌘K`/`⌘L` clear screen · `⌘,` settings · `⌘C` copy · `⌘V` paste · `⌘Z` send readline-undo (Ctrl+_) · `⌘Q` quit · `⌘+`/`⌘-`/`⌘0` font size · `⌘↑`/`⌘↓` scroll line · `⌘PageUp`/`⌘PageDown` scroll page · `⌘Home`/`⌘End` buffer limits · `⌃\`` global expand/collapse toggle (any app)
 
 ## What not to do
 - Do not call `startProcess` directly — always use `startProcessIfNeeded()`.

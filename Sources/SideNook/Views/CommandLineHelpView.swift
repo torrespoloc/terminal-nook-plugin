@@ -277,7 +277,7 @@ struct CommandLineHelpView: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
+        .background(t.groupBg)
     }
 
     // MARK: - Command List

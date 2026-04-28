@@ -4,23 +4,14 @@ import SwiftUI
 struct SettingsPopoverView: View {
     @Bindable var state: NookState
 
-    private var bg: Color {
-        state.isDark ? NookTheme.darkL3 : Color(white: 0.97)
-    }
-    private var cardBg: Color {
-        // rgba(0,0,0,0.15) over L3 per spec — darkens group rows inside the popover
-        state.isDark ? Color.black.opacity(0.15) : Color.white.opacity(0.70)
-    }
-    private var cardStroke: Color {
-        state.isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)
-    }
     private var t: NookTheme { state.theme }
+    private var bg: Color { state.isDark ? NookTheme.darkL3 : Color(white: 0.97) }
+    private var cardBg: Color { t.groupBg }
+    private var cardStroke: Color { t.hoverBg }
     private var fg: Color { t.fg }
     private var fgMuted: Color { t.fgMute }
     private var dividerColor: Color { t.stroke1 }
-    private var segmentActiveBg: Color {
-        state.isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.08)
-    }
+    private var segmentActiveBg: Color { t.pressedBg }
 
     @State private var showShortcuts = false
 
@@ -76,7 +67,7 @@ struct SettingsPopoverView: View {
                                     .frame(width: 20, height: 20)
                                     .background(
                                         RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                            .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
+                                            .fill(t.groupBg)
                                     )
                             }
                             .buttonStyle(.plain)
@@ -91,7 +82,7 @@ struct SettingsPopoverView: View {
                                     .frame(width: 20, height: 20)
                                     .background(
                                         RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                            .fill(state.isDark ? Color.black.opacity(0.30) : Color.black.opacity(0.05))
+                                            .fill(t.groupBg)
                                     )
                             }
                             .buttonStyle(.plain)
@@ -303,7 +294,7 @@ struct SettingsPopoverView: View {
 
     private var accentBinding: Binding<Color> {
         Binding(
-            get: { Color(hex: state.accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498) },
+            get: { Color(hex: state.accentHex) ?? t.defaultAccent },
             set: { state.accentHex = $0.hexString() ?? "#35d07f" }
         )
     }
@@ -345,7 +336,7 @@ struct SettingsPopoverView: View {
     }
 
     private var customAccentSwatch: some View {
-        let currentColor = Color(hex: state.accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498)
+        let currentColor = Color(hex: state.accentHex) ?? t.defaultAccent
         return ZStack {
             // Visual layer — non-interactive
             ZStack {

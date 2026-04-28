@@ -3,6 +3,7 @@ import Testing
 @testable import SideNook
 
 @Suite("NookState")
+@MainActor
 struct NookStateTests {
 
     @Test("starts collapsed")

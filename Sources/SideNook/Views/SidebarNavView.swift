@@ -33,7 +33,7 @@ struct SidebarNavView: View {
 
             // ── Action buttons (horizontal row near top) ──
             HStack(spacing: 0) {
-                SidebarIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
+                SidebarIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark, tone: .cta) {
                     if state.sessions.count < NookState.maxTabs { state.createSession() }
                 }
                 .help("New Tab")
@@ -129,30 +129,43 @@ struct SidebarNavView: View {
 
 // MARK: - Sidebar Icon Button
 
+enum NookButtonTone { case normal, cta }
+
 private struct SidebarIconButton: View {
     let icon: String
     let isOn: Bool
     let fgMuted: Color
     let fgActive: Color
     let isDark: Bool
+    var tone: NookButtonTone = .normal
     let action: () -> Void
 
     @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
 
-    private var hoverBg: Color {
-        isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    private var bgFill: Color {
+        switch tone {
+        case .cta:    return isHovered ? t.ctaBgHover : t.ctaBg
+        case .normal: return isHovered ? t.hoverBg : Color.clear
+        }
+    }
+    private var fgColor: Color {
+        switch tone {
+        case .cta:    return t.ctaFg
+        case .normal: return (isOn || isHovered) ? fgActive : fgMuted
+        }
     }
 
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(isOn || isHovered ? fgActive : fgMuted)
+                .font(.system(size: tone == .cta ? 16 : 14, weight: tone == .cta ? .semibold : .medium))
+                .foregroundStyle(fgColor)
                 .frame(maxWidth: .infinity)
                 .frame(height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isHovered ? hoverBg : Color.clear)
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(bgFill)
                 )
                 .contentShape(Rectangle())
         }
@@ -193,8 +206,8 @@ private struct SidebarTabRow: View {
     private var dotColor: Color {
         switch session.status {
         case .idle: return .clear
-        case .live: return Color(red: 0.21, green: 0.82, blue: 0.50)
-        case .attn: return Color(red: 0.95, green: 0.71, blue: 0.18)
+        case .live: return t.dotLive
+        case .attn: return t.dotAttn
         case .dead: return t.fgMute
         }
     }
@@ -226,20 +239,20 @@ private struct SidebarTabRow: View {
                         }
                 }
 
-                Text(session.title.truncated(to: 22))
+                Text(session.title)
                     .font(.system(size: 13, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
-                    .fixedSize(horizontal: true, vertical: false)
-
-                Spacer(minLength: 0)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 if isHovered || isActive {
                     Button(action: onClose) {
                         Image(systemName: "xmark")
                             .font(.system(size: 8, weight: .bold))  // 9 → 8
-                            .foregroundStyle(isDark ? Color.white.opacity(0.50) : Color.black.opacity(0.45))
-                            .frame(width: 16, height: 16)           // 14 → 16
-                            .background(Circle().fill(isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)))
+                            .foregroundStyle(t.iconFgMute)
+                            .frame(width: 16, height: 16)
+                            .background(Circle().fill(t.hoverBg))
                     }
                     .buttonStyle(.plain)
                     .transition(.opacity.animation(.easeOut(duration: 0.1)))

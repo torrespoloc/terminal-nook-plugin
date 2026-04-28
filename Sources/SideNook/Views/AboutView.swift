@@ -5,22 +5,14 @@ struct AboutView: View {
     let isDark: Bool
     let onDismiss: () -> Void
 
-    private var bg: Color {
-        isDark ? NookTheme.darkL3 : Color(white: 0.96)
-    }
     private var t: NookTheme { NookTheme(isDark: isDark) }
+    private var bg: Color { isDark ? NookTheme.darkL3 : Color(white: 0.96) }
     private var fg: Color { t.fg }
     private var fgMid: Color { t.fgMid }
     private var fgMuted: Color { t.fgMute }
-    private var dividerColor: Color {
-        isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.07)
-    }
-    private var codeBg: Color {
-        isDark ? Color.black.opacity(0.35) : Color.black.opacity(0.08)
-    }
-    private var accentColor: Color {
-        isDark ? Color.white.opacity(0.60) : Color.black.opacity(0.55)
-    }
+    private var dividerColor: Color { t.hoverBg }
+    private var codeBg: Color { t.groupBg }
+    private var accentColor: Color { t.fgMid }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,7 +25,7 @@ struct AboutView: View {
                         .foregroundStyle(fgMuted)
                         .frame(width: 22, height: 22)
                         .background(
-                            Circle().fill(isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06))
+                            Circle().fill(t.hoverBg)
                         )
                 }
                 .buttonStyle(.plain)
@@ -49,7 +41,7 @@ struct AboutView: View {
                     .frame(width: 54, height: 54)
                     .background(
                         RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(isDark ? Color(red: 0.165, green: 0.165, blue: 0.173) : Color(red: 0.925, green: 0.925, blue: 0.933))
+                            .fill(t.L3)
                     )
 
                 Text("SideNook")
@@ -100,7 +92,7 @@ struct AboutView: View {
                     .padding(.vertical, 6)
                     .background(
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(isDark ? Color.white.opacity(0.07) : Color.black.opacity(0.05))
+                            .fill(t.hoverBg)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 6, style: .continuous)
                                     .strokeBorder(t.stroke2, lineWidth: 0.5)

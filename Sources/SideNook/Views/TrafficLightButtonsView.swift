@@ -18,12 +18,11 @@ struct TrafficLightButtonsView: View {
             ) { state.quitApp() }
 
             trafficDot(
-                fill:       .tlInactive,
-                border:     .tlInactiveBorder,
+                fill:       state.isWindowActive ? .tlMinimize       : .tlInactive,
+                border:     state.isWindowActive ? .tlMinimizeBorder  : .tlInactiveBorder,
                 glyph:      "minus",
                 glyphColor: .tlMinimizeGlyph
-            ) {}
-            .disabled(true)
+            ) { state.collapse() }
 
             trafficDot(
                 fill:       state.isWindowActive ? .tlFullscreen       : .tlInactive,
@@ -33,6 +32,7 @@ struct TrafficLightButtonsView: View {
             ) { state.toggleMaxMin() }
         }
         .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
     }
 
     private func trafficDot(

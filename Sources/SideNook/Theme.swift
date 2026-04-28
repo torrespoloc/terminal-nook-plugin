@@ -85,6 +85,38 @@ struct NookTheme {
     var danger:  Color { isDark ? Color(red: 0.957, green: 0.627, blue: 0.627)
                                 : Color.red.opacity(0.80) }
 
+    // ── Hover / pressed surfaces (use these instead of inline opacity literals) ──
+    var hoverBg:        Color { isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06) }
+    var pressedBg:      Color { isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.10) }
+    var glassBg:        Color { isDark ? Color.black.opacity(0.55) : Color.white.opacity(0.75) }
+    var glassBgHover:   Color { isDark ? Color.black.opacity(0.75) : Color.white.opacity(0.92) }
+    var iconFg:         Color { isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.60) }
+    var iconFgMute:     Color { isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45) }
+    var scrim:          Color { isDark ? Color.black.opacity(0.70) : Color.white.opacity(0.80) }
+    var defaultAccent:  Color { Color(red: 0.208, green: 0.816, blue: 0.498) }
+
+    // ── CTA surfaces (used by primary actions like "New Tab") ────────────
+    /// Soft sky blue (#ACDBE9) for light mode; a muted, lower-luminance variant for dark mode so it doesn't glow.
+    var ctaBg: Color {
+        isDark ? Color(red: 0.674, green: 0.859, blue: 0.914).opacity(0.22)
+               : Color(red: 0.674, green: 0.859, blue: 0.914)
+    }
+    var ctaBgHover: Color {
+        isDark ? Color(red: 0.674, green: 0.859, blue: 0.914).opacity(0.32)
+               : Color(red: 0.612, green: 0.820, blue: 0.886)
+    }
+    var ctaFg: Color {
+        isDark ? Color(red: 0.674, green: 0.859, blue: 0.914)
+               : Color(red: 0.10, green: 0.30, blue: 0.40)
+    }
+
+    // ── Pill (rest-state edge indicator) ──────────────────────────────
+    /// The pill stays "always-dark" by design — it's a thin edge marker that needs
+    /// to read against any desktop wallpaper, light or dark. Use these tokens rather
+    /// than inlining the raw values so a future redesign can re-skin from one place.
+    var pillBg:     Color { Color.black.opacity(0.96) }
+    var pillBorder: Color { Color.white.opacity(0.10) }
+
     // ── Status dots ───────────────────────────────────────────────────
     var dotIdle: Color { isDark ? Color(white: 1.0, opacity: 0.22) : Color(white: 0.0, opacity: 0.18) }
     var dotLive: Color { Color(red: 0.21,  green: 0.82,  blue: 0.50) }

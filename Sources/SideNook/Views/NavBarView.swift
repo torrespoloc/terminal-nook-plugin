@@ -65,7 +65,7 @@ struct NavBarView: View {
 
             // ── Action buttons ───────────────────────
             HStack(spacing: 2) {
-                NavIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
+                NavIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark, tone: .cta) {
                     if state.sessions.count < NookState.maxTabs {
                         state.createSession()
                     }
@@ -201,42 +201,48 @@ struct NavIconButton: View {
     let fgMuted: Color
     let fgActive: Color
     let isDark: Bool
+    var tone: NookButtonTone = .normal
     let action: () -> Void
 
     @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
 
-    private var hoverBg: Color {
-        isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
+    private var activeBg:        Color { t.L3 }
+    private var activeBorder:    Color { t.stroke3 }
+    private var activeHighlight: Color { t.innerHighlight }
+
+    private var bgFill: Color {
+        switch tone {
+        case .cta:    return isHovered ? t.ctaBgHover : t.ctaBg
+        case .normal:
+            if isOn      { return activeBg }
+            if isHovered { return t.hoverBg }
+            return Color.clear
+        }
     }
-
-    private var activeBg: Color {
-        isDark ? Color(red: 0.149, green: 0.165, blue: 0.239) : Color.white.opacity(0.95)
-    }
-
-    private var activeBorder: Color {
-        isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.12)
-    }
-
-    private var activeHighlight: Color {
-        isDark ? Color.white.opacity(0.06) : Color.white.opacity(0.90)
+    private var fgColor: Color {
+        switch tone {
+        case .cta:    return t.ctaFg
+        case .normal: return (isOn || isHovered) ? fgActive : fgMuted
+        }
     }
 
     var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(isOn ? fgActive : (isHovered ? fgActive : fgMuted))
+                .font(.system(size: tone == .cta ? 14 : 13, weight: tone == .cta ? .semibold : .medium))
+                .foregroundStyle(fgColor)
                 .frame(width: 28, height: 28)
                 .background(
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(isOn ? activeBg : (isHovered ? hoverBg : Color.clear))
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(bgFill)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .strokeBorder(isOn ? activeBorder : .clear, lineWidth: 0.5)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .strokeBorder(isOn && tone == .normal ? activeBorder : .clear, lineWidth: 0.5)
                         )
                         .overlay(alignment: .top) {
-                            if isOn {
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            if isOn && tone == .normal {
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
                                     .strokeBorder(
                                         LinearGradient(
                                             colors: [activeHighlight, .clear],
@@ -253,5 +259,6 @@ struct NavIconButton: View {
         }
         .buttonStyle(.plain)
         .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
     }
 }

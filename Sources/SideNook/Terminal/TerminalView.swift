@@ -3,14 +3,29 @@ import SwiftUI
 import SwiftTerm
 import AppKit
 
+/// Bottom inset reserved for the SwiftUI scroll-arrow buttons (8 pad + 2×24 buttons + 8 gap).
+@MainActor let scrollBarBottomInset: CGFloat = 64
+
 @MainActor private func slimScroller(in view: NSView) {
     guard let scroller = view.subviews.first(where: { $0 is NSScroller }) as? NSScroller else { return }
     scroller.controlSize = .mini
+    scroller.translatesAutoresizingMaskIntoConstraints = false
+
     // Deactivate SwiftTerm's regular-width constraint and replace with a slim one.
     scroller.constraints
         .filter { $0.firstAttribute == .width && $0.secondAttribute == .notAnAttribute }
         .forEach { $0.isActive = false }
     scroller.widthAnchor.constraint(equalToConstant: 8).isActive = true
+
+    // Lift the scrollbar bottom 8pt above the top of the arrow-button stack so they don't visually collide.
+    if let parent = scroller.superview {
+        // Drop any pre-existing bottom constraints relating scroller to its parent.
+        parent.constraints
+            .filter { ($0.firstItem === scroller && $0.firstAttribute == .bottom) ||
+                      ($0.secondItem === scroller && $0.secondAttribute == .bottom) }
+            .forEach { $0.isActive = false }
+        scroller.bottomAnchor.constraint(equalTo: parent.bottomAnchor, constant: -scrollBarBottomInset).isActive = true
+    }
 }
 
 /// SwiftUI wrapper around a TerminalSession's LocalProcessTerminalView.

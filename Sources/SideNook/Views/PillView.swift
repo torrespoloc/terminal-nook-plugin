@@ -8,8 +8,7 @@ struct PillView: View {
     let state: NookState
     @State private var pulse: Bool = false
 
-    private static let fill   = Color.black.opacity(0.96)
-    private static let border = Color.white.opacity(0.10)
+    private var t: NookTheme { state.theme }
 
     private var statusKind: (color: Color, isAttn: Bool) {
         let statuses = state.sessions.map(\.status)
@@ -58,8 +57,8 @@ struct PillView: View {
         )
 
         shape
-            .fill(Self.fill)
-            .overlay { shape.strokeBorder(Self.border, lineWidth: 1) }
+            .fill(t.pillBg)
+            .overlay { shape.strokeBorder(t.pillBorder, lineWidth: 1) }
             .overlay { statusDot }
 
             .frame(width: pillSize.width, height: pillSize.height)

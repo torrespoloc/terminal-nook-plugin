@@ -4,15 +4,10 @@ import SwiftUI
 struct ShortcutsListView: View {
     let isDark: Bool
 
-    private var fg: Color {
-        isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.85)
-    }
-    private var fgMuted: Color {
-        isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45)
-    }
-    private var badgeBg: Color {
-        isDark ? Color.white.opacity(0.10) : Color.black.opacity(0.07)
-    }
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+    private var fg: Color { t.fg }
+    private var fgMuted: Color { t.iconFgMute }
+    private var badgeBg: Color { t.hoverBg }
 
     private let shortcuts: [(key: String, action: String)] = [
         ("\u{2303}`",           "Show / Hide"),

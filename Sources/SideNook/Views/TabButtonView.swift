@@ -1,13 +1,6 @@
 // Sources/SideNook/Views/TabButtonView.swift
 import SwiftUI
 
-extension String {
-    // "…" counts toward the limit, so a 22-char limit shows at most 21 chars + "…"
-    func truncated(to limit: Int) -> String {
-        count > limit ? prefix(limit - 1) + "…" : self
-    }
-}
-
 struct TabButtonView: View {
     let session: TerminalSession
     let isActive: Bool
@@ -54,10 +47,8 @@ struct TabButtonView: View {
         }
     }
 
-    // Fixed layout constants — all tabs are exactly tabWidth wide.
-    // tabWidth = leadPad(10) + dot(7) + gap(6) + textFrame(149) + gap(6) + closeBtn(14) + trailPad(8) = 200
-    private let tabWidth: CGFloat = 200
-    private let textFrameWidth: CGFloat = 149
+    // Tabs flex to fill their container; height stays uniform on the 8pt grid (24pt + 1pt overshoot for visual balance with the 7pt dot).
+    private let tabHeight: CGFloat = 24
 
     var body: some View {
         Button(action: onSelect) {
@@ -84,11 +75,12 @@ struct TabButtonView: View {
                         }
                     }
 
-                Text(session.title.truncated(to: 22))
+                Text(session.title)
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
-                    .frame(width: textFrameWidth, alignment: .leading)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 // Always in layout — opacity toggle avoids layout reflow
                 Button(action: onClose) {
@@ -102,9 +94,8 @@ struct TabButtonView: View {
                 .opacity(isHovered || isActive ? 1 : 0)
                 .allowsHitTesting(isHovered || isActive)
             }
-            .padding(.leading, 10)
-            .padding(.trailing, 8)
-            .frame(width: tabWidth, height: 26)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: tabHeight)
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(tabBg)

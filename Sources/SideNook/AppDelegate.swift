@@ -377,13 +377,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 width: state.expandedSize.width,
                 height: state.expandedSize.height
             )
-            let pos = clampToScreen(
-                origin: expandedOrigin(screenFrame: screenFrame),
-                size: size,
-                screenFrame: screenFrame
-            )
-            state.panelPosition = pos
-            panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
+            // Only reposition when the frame size differs (e.g. first expand or size change).
+            // Skipping reposition when already expanded keeps the window where the user placed it
+            // — prevents pin/unpin from snapping back to the pill-anchor-derived position.
+            if panel.frame.size != size {
+                let pos = clampToScreen(
+                    origin: expandedOrigin(screenFrame: screenFrame),
+                    size: size,
+                    screenFrame: screenFrame
+                )
+                state.panelPosition = pos
+                panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
+            }
             panel.ignoresMouseEvents = false
             panel.makeKey()
         } else {

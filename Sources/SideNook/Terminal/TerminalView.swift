@@ -3,6 +3,16 @@ import SwiftUI
 import SwiftTerm
 import AppKit
 
+@MainActor private func slimScroller(in view: NSView) {
+    guard let scroller = view.subviews.first(where: { $0 is NSScroller }) as? NSScroller else { return }
+    scroller.controlSize = .mini
+    // Deactivate SwiftTerm's regular-width constraint and replace with a slim one.
+    scroller.constraints
+        .filter { $0.firstAttribute == .width && $0.secondAttribute == .notAnAttribute }
+        .forEach { $0.isActive = false }
+    scroller.widthAnchor.constraint(equalToConstant: 8).isActive = true
+}
+
 /// SwiftUI wrapper around a TerminalSession's LocalProcessTerminalView.
 /// The session owns the PTY view so state survives tab switches.
 /// A thin TerminalWrapperView sits between SwiftUI and SwiftTerm to:
@@ -15,6 +25,7 @@ struct TerminalSessionView: NSViewRepresentable {
     func makeNSView(context: Context) -> TerminalWrapperView {
         let wrapper = TerminalWrapperView()
         wrapper.addSubview(session.terminalView)
+        slimScroller(in: session.terminalView)
         wrapper.onFirstLayout = { [session] in
             session.startProcessIfNeeded()
         }

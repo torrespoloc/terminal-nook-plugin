@@ -51,10 +51,10 @@ private struct ScrollButtons: View {
     var body: some View {
         VStack(spacing: 1) {
             scrollBtn(systemName: "chevron.up") {
-                session.terminalView.scrollUp(lines: 3)
+                session.terminalView.scrollUp(lines: 50_000)
             }
             scrollBtn(systemName: "chevron.down") {
-                session.terminalView.scrollDown(lines: 3)
+                session.terminalView.scrollDown(lines: 50_000)
             }
         }
         .background(

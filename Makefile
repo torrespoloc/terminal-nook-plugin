@@ -2,7 +2,7 @@
 
 BINARY_DIR = .build/release
 BINARY     = $(BINARY_DIR)/SideNook
-APP        = SideNook.app
+APP        = .build/SideNook.app
 
 build:
 	swift build -c release

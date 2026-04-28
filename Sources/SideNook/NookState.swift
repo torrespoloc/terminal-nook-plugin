@@ -47,6 +47,7 @@ final class NookState {
     var fontSize: CGFloat = 13
 
     var isWindowActive: Bool = true
+    var isMaximized: Bool = false
 
     var showSettings: Bool = false
     var showAbout: Bool = false
@@ -177,6 +178,11 @@ final class NookState {
     func collapse() { isPinned = false; isExpanded = false }
     func toggle()   { isExpanded.toggle() }
     func togglePin() { isPinned.toggle() }
+    func quitApp() { NSApplication.shared.terminate(nil) }
+    func toggleMaxMin() {
+        isMaximized.toggle()
+        expandedSize = isMaximized ? NookState.maxExpandedSize : NookState.minExpandedSize
+    }
 
     func toggleAppearance() {
         appearance = isDark ? .light : .dark

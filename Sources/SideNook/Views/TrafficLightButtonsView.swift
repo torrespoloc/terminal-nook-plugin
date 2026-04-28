@@ -15,23 +15,22 @@ struct TrafficLightButtonsView: View {
                 border:     state.isWindowActive ? .tlCloseBorder  : .tlInactiveBorder,
                 glyph:      "xmark",
                 glyphColor: .tlCloseGlyph
-            ) { state.collapse() }
+            ) { state.quitApp() }
 
             trafficDot(
-                fill:       state.isWindowActive ? .tlMinimize       : .tlInactive,
-                border:     state.isWindowActive ? .tlMinimizeBorder  : .tlInactiveBorder,
+                fill:       .tlInactive,
+                border:     .tlInactiveBorder,
                 glyph:      "minus",
                 glyphColor: .tlMinimizeGlyph
-            ) { state.togglePin() }
+            ) {}
+            .disabled(true)
 
             trafficDot(
                 fill:       state.isWindowActive ? .tlFullscreen       : .tlInactive,
                 border:     state.isWindowActive ? .tlFullscreenBorder  : .tlInactiveBorder,
-                glyph:      "arrow.up.left.and.arrow.down.right",
+                glyph:      state.isMaximized ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right",
                 glyphColor: .tlFullscreenGlyph
-            ) {
-                state.tabLayout = (state.tabLayout == .topBar) ? .leftSidebar : .topBar
-            }
+            ) { state.toggleMaxMin() }
         }
         .onHover { isHovered = $0 }
     }

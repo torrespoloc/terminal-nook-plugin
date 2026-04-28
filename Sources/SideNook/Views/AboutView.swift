@@ -81,7 +81,7 @@ struct AboutView: View {
                 Text("AI Product Designer")
                     .font(.system(size: 12))
                     .foregroundStyle(fgMid)
-                Text("2025  \u{00B7}  MIT License")
+                Text("2026  \u{00B7}  MIT License")
                     .font(.system(size: 12))
                     .foregroundStyle(fgMid)
                 Button(action: {

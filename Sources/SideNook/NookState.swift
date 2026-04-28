@@ -43,7 +43,7 @@ final class NookState {
         }
     }
     var accentHex: String = "#35d07f"
-    var accentColor: Color { Color(hex: accentHex) ?? Color(red: 0.208, green: 0.816, blue: 0.498) }
+    var accentColor: Color { Color(hex: accentHex) ?? theme.defaultAccent }
     var fontSize: CGFloat = 13
 
     var isWindowActive: Bool = true
@@ -53,6 +53,10 @@ final class NookState {
     var showAbout: Bool = false
     var reduceMotion: Bool = false
     var showCommandHelp: Bool = false
+
+    // Find bar (⌘F) — visible state and query string. Active session only.
+    var findVisible: Bool = false
+    var findQuery: String = ""
 
     /// Timestamp of the most recent popover auto-dismiss. Used to debounce the
     /// trigger button: AppKit treats a click on the anchor button as "outside"
@@ -160,10 +164,14 @@ final class NookState {
     init() {
         let screen = NSScreen.main ?? NSScreen.screens.first!
         let frame = screen.visibleFrame
-        // Default: top edge, pill centered horizontally
-        let centerOffset = frame.midX - 76  // 76 = pillHeight/2
-        self.panelPosition = CGPoint(x: centerOffset, y: frame.maxY - 6)
-        self.pillEdgeOffset = centerOffset
+        // Default: left edge, pill near the top of the screen.
+        // pillEdgeOffset on a vertical edge is the pill's Y origin (macOS Y is bottom-up,
+        // so high Y = near the top). Inset 8pt from the very top for breathing room.
+        self.dockedEdge = .left
+        let topInset: CGFloat = 8
+        let topOffset = frame.maxY - 128 - topInset  // 128 = pillHeight
+        self.panelPosition = CGPoint(x: frame.minX, y: topOffset)
+        self.pillEdgeOffset = topOffset
         // Restore previous sessions, or create a fresh one if none saved.
         restoreSessionSnapshots()
         if sessions.isEmpty { createSession() }
@@ -181,7 +189,15 @@ final class NookState {
     func quitApp() { NSApplication.shared.terminate(nil) }
     func toggleMaxMin() {
         isMaximized.toggle()
-        expandedSize = isMaximized ? NookState.maxExpandedSize : NookState.minExpandedSize
+        if isMaximized {
+            // True full-screen fill: take the visible frame of the panel's screen.
+            // visibleFrame already excludes menu bar + Dock.
+            let screen = NSScreen.main ?? NSScreen.screens.first
+            let size = screen?.visibleFrame.size ?? NookState.maxExpandedSize
+            expandedSize = CGSize(width: size.width, height: size.height)
+        } else {
+            expandedSize = NookState.minExpandedSize
+        }
     }
 
     func toggleAppearance() {

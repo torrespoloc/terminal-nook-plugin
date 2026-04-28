@@ -61,7 +61,7 @@ struct ExpandedView: View {
                     SidebarNavView(state: state)
                         .padding(.leading, 8)
                         .padding(.vertical, 8)
-                    TerminalContainerView(session: session, isDark: state.isDark)
+                    TerminalContainerView(session: session, isDark: state.isDark, state: state)
                         .padding(.trailing, 8)
                         .padding(.top, 16)
                         .padding(.bottom, 8)
@@ -69,7 +69,7 @@ struct ExpandedView: View {
             } else {
                 VStack(spacing: 0) {
                     NavBarView(state: state)
-                    TerminalContainerView(session: session, isDark: state.isDark)
+                    TerminalContainerView(session: session, isDark: state.isDark, state: state)
                         .padding(.horizontal, 8)
                         .padding(.top, 16)
                         .padding(.bottom, 8)

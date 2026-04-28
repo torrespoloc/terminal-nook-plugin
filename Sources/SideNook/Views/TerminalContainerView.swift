@@ -6,9 +6,10 @@ import SwiftUI
 struct TerminalContainerView: View {
     let session: TerminalSession
     let isDark: Bool
+    var state: NookState? = nil
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             TerminalSessionView(session: session)
                 .id(session.id)
                 .contextMenu {
@@ -25,8 +26,14 @@ struct TerminalContainerView: View {
             } else {
                 ScrollButtons(session: session, isDark: isDark)
             }
+
+            if let state, state.findVisible {
+                FindBarView(state: state, session: session)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
         }
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .animation(.easeOut(duration: 0.16), value: state?.findVisible ?? false)
     }
 }
 
@@ -36,46 +43,79 @@ private struct ScrollButtons: View {
     let session: TerminalSession
     let isDark: Bool
 
-    @State private var isHovered = false
+    @State private var hoveredArrow: Arrow? = nil
+    @State private var isScrolledUp: Bool = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
 
-    private var buttonBg: Color {
-        isDark ? Color.black.opacity(0.55) : Color.white.opacity(0.75)
-    }
-    private var buttonHoverBg: Color {
-        isDark ? Color.black.opacity(0.75) : Color.white.opacity(0.92)
-    }
-    private var iconColor: Color {
-        isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.60)
-    }
+    private enum Arrow: Equatable { case up, down }
+
+    /// 0.5s poll is responsive enough to flip the down-arrow blue when output streams in,
+    /// and cheap enough to not measurably affect CPU.
+    private let pulse = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(spacing: 1) {
-            scrollBtn(systemName: "chevron.up") {
-                session.terminalView.scrollUp(lines: 50_000)
-            }
-            scrollBtn(systemName: "chevron.down") {
-                session.terminalView.scrollDown(lines: 50_000)
-            }
+        VStack(spacing: 6) {
+            arrowButton(.up,   icon: "chevron.up")
+            arrowButton(.down, icon: "chevron.down")
         }
-        .background(
-            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(isHovered ? buttonHoverBg : buttonBg)
-                .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
-        )
-        .onHover { isHovered = $0 }
         .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-        .allowsHitTesting(true)
+        .onReceive(pulse) { _ in
+            let next = session.terminalView.scrollPosition < 1.0
+            if next != isScrolledUp {
+                withAnimation(.easeOut(duration: 0.18)) { isScrolledUp = next }
+            }
+        }
     }
 
-    private func scrollBtn(systemName: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
+    private func arrowButton(_ arrow: Arrow, icon: String) -> some View {
+        let isCTA = (arrow == .down) && isScrolledUp
+        let isHover = (hoveredArrow == arrow)
+        let bg: Color = {
+            if isCTA { return isHover ? t.ctaBgHover : t.ctaBg }
+            return isHover ? t.glassBgHover : t.glassBg
+        }()
+        let fg: Color = isCTA ? t.ctaFg : t.iconFg
+
+        return Button {
+            smoothScroll(direction: arrow)
+        } label: {
+            Image(systemName: icon)
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(iconColor)
-                .frame(width: 22, height: 18)
+                .foregroundStyle(fg)
+                .frame(width: 24, height: 24)
+                .background(Capsule(style: .continuous).fill(bg))
+                .overlay(
+                    Capsule(style: .continuous)
+                        .strokeBorder(isCTA ? t.ctaFg.opacity(0.20) : Color.clear, lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(isCTA ? 0.20 : 0.14), radius: 3, y: 1)
         }
         .buttonStyle(.plain)
+        .onHover { hovering in
+            hoveredArrow = hovering ? arrow : (hoveredArrow == arrow ? nil : hoveredArrow)
+        }
+        .animation(.easeOut(duration: 0.12), value: isHover)
+        .animation(.easeOut(duration: 0.18), value: isCTA)
+    }
+
+    /// Animates SwiftTerm scroll over ~240ms in 12 small chunks for a smooth feel.
+    /// SwiftTerm clamps both directions internally — at the buffer edge each chunk is a no-op.
+    private func smoothScroll(direction: Arrow) {
+        let stepCount = 12
+        let stepNanos: UInt64 = 20_000_000  // 20ms
+        let linesPerStep = 200
+        let session = self.session
+
+        Task { @MainActor in
+            for _ in 0..<stepCount {
+                switch direction {
+                case .up:   session.terminalView.scrollUp(lines: linesPerStep)
+                case .down: session.terminalView.scrollDown(lines: linesPerStep)
+                }
+                try? await Task.sleep(nanoseconds: stepNanos)
+            }
+        }
     }
 }
 
@@ -85,50 +125,36 @@ private struct DeadSessionOverlay: View {
     let isDark: Bool
     let onRestart: () -> Void
 
-    private var bg: Color {
-        isDark ? Color.black.opacity(0.70) : Color.white.opacity(0.80)
-    }
-    private var fg: Color {
-        isDark ? Color.white.opacity(0.85) : Color.black.opacity(0.80)
-    }
-    private var fgMuted: Color {
-        isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45)
-    }
-    private var buttonBg: Color {
-        isDark ? Color.white.opacity(0.12) : Color.black.opacity(0.08)
-    }
-    private var buttonHoverBg: Color {
-        isDark ? Color.white.opacity(0.20) : Color.black.opacity(0.13)
-    }
-
+    private var t: NookTheme { NookTheme(isDark: isDark) }
     @State private var isHovered = false
 
     var body: some View {
         ZStack {
-            bg.ignoresSafeArea()
+            t.scrim.ignoresSafeArea()
 
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 Image(systemName: "terminal")
                     .font(.system(size: 24, weight: .light))
-                    .foregroundStyle(fgMuted)
+                    .foregroundStyle(t.iconFgMute)
 
                 Text("Session ended")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(fg)
+                    .foregroundStyle(t.fg)
 
                 Button(action: onRestart) {
                     Text("Restart")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(fg)
+                        .foregroundStyle(t.fg)
                         .padding(.horizontal, 16)
-                        .padding(.vertical, 7)
+                        .padding(.vertical, 8)
                         .background(
-                            RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(isHovered ? buttonHoverBg : buttonBg)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(isHovered ? t.pressedBg : t.hoverBg)
                         )
                 }
                 .buttonStyle(.plain)
                 .onHover { isHovered = $0 }
+                .animation(.easeOut(duration: 0.12), value: isHovered)
             }
         }
         .transition(.opacity.animation(.easeIn(duration: 0.15)))

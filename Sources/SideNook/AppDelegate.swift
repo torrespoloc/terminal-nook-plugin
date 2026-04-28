@@ -1,6 +1,7 @@
 // Sources/SideNook/AppDelegate.swift
 import AppKit
 import SwiftUI
+import SwiftTerm
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -147,6 +148,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return nil
             case "q":
                 NSApp.terminate(nil)
+                return nil
+            case "f" where !shift:
+                if self.state.activeSession != nil {
+                    self.state.findVisible.toggle()
+                    if !self.state.findVisible { self.state.findQuery = "" }
+                }
+                return nil
+            case "g" where !shift:
+                if let session = self.state.activeSession,
+                   !self.state.findQuery.isEmpty {
+                    session.terminalView.findNext(
+                        self.state.findQuery,
+                        options: SwiftTerm.SearchOptions(caseSensitive: false, regex: false, wholeWord: false),
+                        scrollToResult: true
+                    )
+                }
+                return nil
+            case "G":
+                if let session = self.state.activeSession,
+                   !self.state.findQuery.isEmpty {
+                    session.terminalView.findPrevious(
+                        self.state.findQuery,
+                        options: SwiftTerm.SearchOptions(caseSensitive: false, regex: false, wholeWord: false),
+                        scrollToResult: true
+                    )
+                }
                 return nil
             case "1", "2", "3", "4", "5", "6", "7", "8", "9":
                 if let num = Int(chars) {
@@ -522,12 +549,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panelFrame = panel.frame
         let center = CGPoint(x: panelFrame.midX, y: panelFrame.midY)
         let edge = nearestScreenEdge(panelCenter: center, screenFrame: screenFrame)
-        state.dockedEdge = edge
-        switch edge {
-        case .left, .right:
-            state.pillEdgeOffset = panelFrame.midY - Constants.pillHeight / 2
-        case .top, .bottom:
-            state.pillEdgeOffset = panelFrame.midX - Constants.pillHeight / 2
+        let nextOffset: CGFloat = {
+            switch edge {
+            case .left, .right: return panelFrame.midY - Constants.pillHeight / 2
+            case .top, .bottom: return panelFrame.midX - Constants.pillHeight / 2
+            }
+        }()
+        // Animate the edge / offset transition so layout flips (e.g. sidebar moving left↔right) glide smoothly.
+        withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
+            state.dockedEdge = edge
+            state.pillEdgeOffset = nextOffset
         }
     }
 

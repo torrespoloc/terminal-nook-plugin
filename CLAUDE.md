@@ -102,7 +102,7 @@ To send text input to a running shell, use `TerminalSession.send(text:)` — it 
 | `NookState.swift` | All `@Observable` state; `terminalContentSize(for:)`; session management |
 | `SideNookPanel.swift` | `NSPanel` subclass; focus routing; drag end callback |
 | `Theme.swift` | `NookTheme` struct and all design tokens |
-| `Models/TerminalSession.swift` | Session model owning PTY; `startProcessIfNeeded()` is idempotent and deferred |
+| `Models/TerminalSession.swift` | Session model owning PTY; `startProcessIfNeeded()` is idempotent and deferred; yellow dot detection via `attnPatterns` / `runningIndicators` / `detectAttentionPrompt()` |
 | `Views/SideNookView.swift` | Root SwiftUI view — pill + expanded states + resize handles |
 | `Views/NavBarView.swift` | Top-bar layout nav bar; tabs, drag grip, action buttons |
 | `Views/SidebarNavView.swift` | Left-sidebar layout nav; drag grip, action buttons, tab list, help panel |
@@ -130,6 +130,7 @@ Where to look first for each concern:
 | Accent color + theming | `Theme.swift` · `NookState.swift` · `Views/SettingsPopoverView.swift` | `NookTheme.accent`, `accentHex` |
 | Terminal rendering | `Terminal/TerminalView.swift` · `Views/TerminalContainerView.swift` | `TerminalSessionView`, `TerminalWrapperView` |
 | Session lifecycle | `Models/TerminalSession.swift` · `NookState.swift` | `createSession()`, `closeSession()`, `activeSession` |
+| Yellow dot (attn state) | `Models/TerminalSession.swift` | `attnPatterns`, `runningIndicators`, `detectAttentionPrompt()`, `attnScanRows`; poller runs in `AppDelegate.startStatusPolling()` every 0.4 s |
 | Mouse monitoring / edge snap | `AppDelegate.swift` | `hitTestRect()`, `snapToNearestEdge()` |
 | Custom traffic lights | `Views/TrafficLightButtonsView.swift` · `TrafficLightColors.swift` · `TrafficLightMetrics.swift` | `Color.tl*`, `TrafficLightMetrics.shared` |
 | Settings UI | `Views/SettingsPopoverView.swift` | `SettingsPopoverView` |

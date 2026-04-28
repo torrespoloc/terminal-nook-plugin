@@ -117,8 +117,8 @@ final class TerminalSession: Identifiable {
         case .light:
             terminalView.nativeBackgroundColor = NSColor(red: 0.961, green: 0.961, blue: 0.957, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1)
-            // Light mode: cornflower blue selection — clearly visible on off-white without overwhelming text.
-            terminalView.selectedTextBackgroundColor = NSColor(red: 0.24, green: 0.58, blue: 0.94, alpha: 0.35)
+            // Light mode: pale sky-blue selection — high brightness so it reads as light blue at any alpha.
+            terminalView.selectedTextBackgroundColor = NSColor(red: 0.60, green: 0.84, blue: 1.0, alpha: 0.55)
             terminalView.installColors(Self.lightPalette)
         }
         // Signal running CLIs (Claude Code, bat, etc.) to re-query terminal background
@@ -161,17 +161,16 @@ final class TerminalSession: Identifiable {
 
     // MARK: - Attention detection
 
-    /// Substrings that indicate the session is blocking on user input.
-    /// Matched case-insensitively against the bottom slice of the visible
-    /// terminal buffer. Patterns are conservative on purpose — we want zero
-    /// false positives while shells are running normally.
+    /// Substrings present only when the terminal is blocking on user input.
+    /// Matched case-insensitively against the bottom rows of the visible buffer.
     private static let attnPatterns: [String] = [
-        // Claude Code numbered selector — ❯ marks whichever option is highlighted.
-        // Cover 1–9 so any selected position triggers the dot.
+        // Claude Code numbered selector — ❯ marks the highlighted option.
         "❯ 1.", "❯ 2.", "❯ 3.", "❯ 4.", "❯ 5.",
         "❯ 6.", "❯ 7.", "❯ 8.", "❯ 9.",
-        // Claude Code footer present on every tool-approval / proceed prompt.
+        // Claude Code tool-approval footers.
         "esc to cancel",
+        // "shift+tab" appears in the "allow all edits" option on every approval prompt.
+        "shift+tab",
         // Generic confirmation prompts.
         "[y/n]", "[y/n]?", "(y/n)", "(yes/no)",
         // Sudo and password prompts.
@@ -180,9 +179,20 @@ final class TerminalSession: Identifiable {
         "press enter to continue", "press any key to continue",
     ]
 
-    /// Number of bottom rows scanned for an attention prompt. The active
-    /// prompt always sits near the cursor, so we don't need the whole buffer.
-    private static let attnScanRows: Int = 24
+    /// Substrings that definitively indicate the session is NOT blocked on
+    /// input. Any match here wins over attnPatterns and returns false.
+    /// "esc to interrupt" appears in Claude Code's status footer while it is
+    /// actively running — never during an approval prompt.
+    private static let runningIndicators: [String] = [
+        "esc to interrupt",
+    ]
+
+    /// Rows from the bottom of the visible buffer to scan. Keeping this small
+    /// (≤ 12) prevents false positives from grep / cat output that happens to
+    /// contain attn-pattern strings (e.g. reading TerminalSession.swift itself
+    /// shows "esc to cancel" as a Swift string literal). The active approval
+    /// prompt always appears within a few rows of the cursor.
+    private static let attnScanRows: Int = 12
 
     /// Recomputes `status` from the current terminal buffer. Called periodically
     /// by `NookState`'s status poller while sessions are alive.
@@ -211,6 +221,11 @@ final class TerminalSession: Identifiable {
             blob += "\n"
         }
         let lower = blob.lowercased()
+        // Running indicators win — if Claude Code is actively executing, it is
+        // never simultaneously waiting for approval input.
+        if Self.runningIndicators.contains(where: { lower.contains($0) }) {
+            return false
+        }
         return Self.attnPatterns.contains { lower.contains($0.lowercased()) }
     }
 }

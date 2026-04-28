@@ -210,7 +210,7 @@ struct CommandLineHelpView: View {
                     .animation(.easeOut(duration: 0.15), value: state.showCommandHelp)
             }
             .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 8)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

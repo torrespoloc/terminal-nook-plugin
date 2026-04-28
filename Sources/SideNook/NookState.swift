@@ -8,7 +8,7 @@ import SwiftUI
 @Observable
 final class NookState {
     static let minExpandedSize = CGSize(width: 300, height: 300)
-    static let maxExpandedSize = CGSize(width: 900, height: 900)
+    static let maxExpandedSize = CGSize(width: 800, height: 1100)
     static let maxTabs = 20
     static let minFontSize: CGFloat = 9
     static let maxFontSize: CGFloat = 28
@@ -194,7 +194,10 @@ final class NookState {
             // visibleFrame already excludes menu bar + Dock.
             let screen = NSScreen.main ?? NSScreen.screens.first
             let size = screen?.visibleFrame.size ?? NookState.maxExpandedSize
-            expandedSize = CGSize(width: size.width, height: size.height)
+            expandedSize = CGSize(
+                width:  min(size.width,  NookState.maxExpandedSize.width),
+                height: min(size.height, NookState.maxExpandedSize.height)
+            )
         } else {
             expandedSize = NookState.minExpandedSize
         }

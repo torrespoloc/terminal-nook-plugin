@@ -18,11 +18,12 @@ struct TrafficLightButtonsView: View {
             ) { state.quitApp() }
 
             trafficDot(
-                fill:       state.isWindowActive ? .tlMinimize       : .tlInactive,
-                border:     state.isWindowActive ? .tlMinimizeBorder  : .tlInactiveBorder,
+                fill:       .tlInactive,
+                border:     .tlInactiveBorder,
                 glyph:      "minus",
-                glyphColor: .tlMinimizeGlyph
-            ) { state.collapse() }
+                glyphColor: .tlMinimizeGlyph,
+                disabled:   true
+            ) {}
 
             trafficDot(
                 fill:       state.isWindowActive ? .tlFullscreen       : .tlInactive,
@@ -40,13 +41,14 @@ struct TrafficLightButtonsView: View {
         border: Color,
         glyph: String,
         glyphColor: Color,
+        disabled: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
             ZStack {
                 Circle().fill(fill)
                 Circle().strokeBorder(border, lineWidth: 1)
-                if isHovered && state.isWindowActive {
+                if isHovered && state.isWindowActive && !disabled {
                     Image(systemName: glyph)
                         .font(.system(size: m.diameter * 0.52, weight: .bold))
                         .foregroundStyle(glyphColor)
@@ -55,5 +57,6 @@ struct TrafficLightButtonsView: View {
             .frame(width: m.diameter, height: m.diameter)
         }
         .buttonStyle(.plain)
+        .disabled(disabled)
     }
 }

@@ -73,7 +73,7 @@ private struct ScrollButtons: View {
         let isHover = (hoveredArrow == arrow)
         let bg: Color = {
             if isCTA { return isHover ? t.ctaBgHover : t.ctaBg }
-            return isHover ? t.glassBgHover : t.glassBg
+            return isHover ? t.arrowBgHover : t.arrowBg
         }()
         let fg: Color = isCTA ? t.ctaFg : t.iconFg
 

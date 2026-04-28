@@ -205,7 +205,7 @@ private struct SidebarTabRow: View {
 
     private var dotColor: Color {
         switch session.status {
-        case .idle: return .clear
+        case .idle: return t.dotIdle
         case .live: return t.dotLive
         case .attn: return t.dotAttn
         case .dead: return t.fgMute
@@ -215,29 +215,27 @@ private struct SidebarTabRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 8) {                                    // 8 ✓
-                if session.status != .idle {
-                    Circle()
-                        .fill(dotColor)
-                        .frame(width: 8, height: 8)                    // 7 → 8
-                        .shadow(color: session.status != .dead ? dotColor.opacity(0.53) : .clear, radius: 4) // 3 → 4
-                        .opacity(session.status == .attn ? attnOpacity : 1)
-                        .onAppear {
-                            if session.status == .attn {
-                                withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
-                                    attnOpacity = 0.25
-                                }
+                Circle()
+                    .fill(dotColor)
+                    .frame(width: 8, height: 8)
+                    .shadow(color: (session.status == .idle || session.status == .dead) ? .clear : dotColor.opacity(0.53), radius: 4)
+                    .opacity(session.status == .attn ? attnOpacity : 1)
+                    .onAppear {
+                        if session.status == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
                             }
                         }
-                        .onChange(of: session.status) { _, newStatus in
-                            if newStatus == .attn {
-                                withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
-                                    attnOpacity = 0.25
-                                }
-                            } else {
-                                withAnimation { attnOpacity = 1 }
+                    }
+                    .onChange(of: session.status) { _, newStatus in
+                        if newStatus == .attn {
+                            withAnimation(.easeInOut(duration: 0.55).repeatForever()) {
+                                attnOpacity = 0.25
                             }
+                        } else {
+                            withAnimation { attnOpacity = 1 }
                         }
-                }
+                    }
 
                 Text(session.title)
                     .font(.system(size: 13, weight: isActive ? .semibold : .medium))

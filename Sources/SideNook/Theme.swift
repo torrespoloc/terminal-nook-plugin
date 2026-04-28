@@ -90,6 +90,8 @@ struct NookTheme {
     var pressedBg:      Color { isDark ? Color.white.opacity(0.14) : Color.black.opacity(0.10) }
     var glassBg:        Color { isDark ? Color.black.opacity(0.55) : Color.white.opacity(0.75) }
     var glassBgHover:   Color { isDark ? Color.black.opacity(0.75) : Color.white.opacity(0.92) }
+    var arrowBg:        Color { isDark ? Color(white: 0.20) : Color(white: 0.96) }
+    var arrowBgHover:   Color { isDark ? Color(white: 0.28) : Color(white: 0.90) }
     var iconFg:         Color { isDark ? Color.white.opacity(0.70) : Color.black.opacity(0.60) }
     var iconFgMute:     Color { isDark ? Color.white.opacity(0.45) : Color.black.opacity(0.45) }
     var scrim:          Color { isDark ? Color.black.opacity(0.70) : Color.white.opacity(0.80) }

@@ -204,11 +204,19 @@ final class TerminalSession: Identifiable {
     }
 }
 
-/// Type alias kept so the rest of the app can refer to a SideNook-owned name
-/// while we still get full SwiftTerm behavior. First-keystroke detection is
-/// handled by AppDelegate's local key monitor (SwiftTerm's `keyDown` is not
-/// `open`, so we cannot subclass-override it from outside the module).
-typealias SideNookTerminalView = LocalProcessTerminalView
+/// Minimal subclass of LocalProcessTerminalView with two AppKit overrides:
+///
+/// • `acceptsFirstMouse` — without this, AppKit skips `mouseDown` delivery when
+///   the panel is not key. SwiftTerm's `mouseDown` clears `selection.active`;
+///   if it never fires, a stale selection extends on the first drag instead of
+///   starting fresh, producing wrong or empty selections.
+///
+/// • `mouseDownCanMoveWindow` — explicitly false so three-finger trackpad drags
+///   always perform text selection, never panel movement.
+final class SideNookTerminalView: LocalProcessTerminalView {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+    override var mouseDownCanMoveWindow: Bool { false }
+}
 
 // MARK: - Session Coordinator
 

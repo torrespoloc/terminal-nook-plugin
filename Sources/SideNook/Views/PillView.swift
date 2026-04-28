@@ -61,7 +61,7 @@ struct PillView: View {
             .fill(Self.fill)
             .overlay { shape.strokeBorder(Self.border, lineWidth: 1) }
             .overlay { statusDot }
-            .shadow(color: .black.opacity(0.5), radius: 14, y: 8)
+
             .frame(width: pillSize.width, height: pillSize.height)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: edgeAlignment)
     }

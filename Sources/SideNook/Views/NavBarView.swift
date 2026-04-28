@@ -41,7 +41,8 @@ struct NavBarView: View {
                             isActive: session.id == state.activeSessionID,
                             isDark: state.isDark,
                             onSelect: { state.switchToSession(session.id) },
-                            onClose: { state.closeSession(session.id) }
+                            onClose: { state.closeSession(session.id) },
+                            onRename: { session.title = $0 }
                         )
                         .onDrop(of: [.text], isTargeted: nil) { providers in
                             providers.first?.loadObject(ofClass: NSString.self) { item, _ in

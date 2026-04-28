@@ -14,9 +14,12 @@ struct TabButtonView: View {
     let isDark: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
+    let onRename: (String) -> Void
 
     @State private var isHovered = false
     @State private var attnOpacity: Double = 1.0
+    @State private var isRenaming = false
+    @State private var renameText = ""
 
     private var t: NookTheme { NookTheme(isDark: isDark) }
 
@@ -135,6 +138,22 @@ struct TabButtonView: View {
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.15), value: isHovered)
         .animation(.easeOut(duration: 0.15), value: isActive)
+        .contextMenu {
+            Button("Rename Tab") {
+                renameText = session.title
+                isRenaming = true
+            }
+            Divider()
+            Button("Close Tab", role: .destructive, action: onClose)
+        }
+        .alert("Rename Tab", isPresented: $isRenaming) {
+            TextField("Tab name", text: $renameText)
+            Button("Rename") {
+                let trimmed = renameText.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty { onRename(trimmed) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
         .onDrag {
             NSItemProvider(object: session.id.uuidString as NSString)
         }

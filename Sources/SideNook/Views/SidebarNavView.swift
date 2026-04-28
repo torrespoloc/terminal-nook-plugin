@@ -13,16 +13,17 @@ struct SidebarNavView: View {
                 TrafficLightButtonsView(state: state)
                     .padding(.leading, 8)
                 Spacer()
-                Button(action: { state.tabLayout = .topBar }) {
-                    Image(systemName: "rectangle.topthird.inset.filled")
-                        .font(.system(size: 14, weight: .medium))   // 13 → 14
-                        .foregroundStyle(t.fgMute)
-                        .frame(width: 32, height: 32)               // 28 → 32
-                        .contentShape(Rectangle())
+                NavIconButton(
+                    icon: "rectangle.topthird.inset.filled",
+                    isOn: false,
+                    fgMuted: t.fgMute,
+                    fgActive: t.fg,
+                    isDark: state.isDark
+                ) {
+                    state.tabLayout = .topBar
                 }
-                .buttonStyle(.plain)
                 .help("Switch to Top-bar Layout")
-                .padding(.trailing, 4)                              // 4 ✓
+                .padding(.trailing, 4)
             }
             .frame(height: 32)                                      // 34 → 32
             .frame(maxWidth: .infinity)
@@ -32,22 +33,22 @@ struct SidebarNavView: View {
 
             // ── Action buttons (horizontal row near top) ──
             HStack(spacing: 0) {
-                sidebarButton(icon: "plus") {
+                SidebarIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
                     if state.sessions.count < NookState.maxTabs { state.createSession() }
                 }
                 .help("New Tab")
 
-                sidebarButton(icon: state.isDark ? "sun.max.fill" : "moon.fill") {
+                SidebarIconButton(icon: state.isDark ? "sun.max.fill" : "moon.fill", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
                     state.toggleAppearance()
                 }
                 .help(state.isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
 
-                sidebarButton(icon: state.isPinned ? "pin.fill" : "pin.slash", isOn: state.isPinned) {
+                SidebarIconButton(icon: state.isPinned ? "pin.fill" : "pin.slash", isOn: state.isPinned, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
                     state.togglePin()
                 }
                 .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
 
-                sidebarButton(icon: "gearshape", isOn: state.showSettings) {
+                SidebarIconButton(icon: "gearshape", isOn: state.showSettings, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
                     if state.canTogglePopover() { state.showSettings.toggle() }
                 }
                 .help("Settings")
@@ -79,7 +80,8 @@ struct SidebarNavView: View {
                             isActive: session.id == state.activeSessionID,
                             isDark: state.isDark,
                             onSelect: { state.switchToSession(session.id) },
-                            onClose: { state.closeSession(session.id) }
+                            onClose: { state.closeSession(session.id) },
+                            onRename: { session.title = $0 }
                         )
                     }
                 }
@@ -123,28 +125,40 @@ struct SidebarNavView: View {
         )
     }
 
-    private var dragGrip: some View {
-        VStack(spacing: 4) {                                        // 3 → 4
-            ForEach(0..<3, id: \.self) { _ in
-                HStack(spacing: 4) {                                // 3 → 4
-                    Circle().fill(t.fgMute).frame(width: 4, height: 4)  // 3 → 4
-                    Circle().fill(t.fgMute).frame(width: 4, height: 4)  // 3 → 4
-                }
-            }
-        }
-        .padding(.leading, 8)                                       // 10 → 8
+}
+
+// MARK: - Sidebar Icon Button
+
+private struct SidebarIconButton: View {
+    let icon: String
+    let isOn: Bool
+    let fgMuted: Color
+    let fgActive: Color
+    let isDark: Bool
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    private var hoverBg: Color {
+        isDark ? Color.white.opacity(0.08) : Color.black.opacity(0.06)
     }
 
-    private func sidebarButton(icon: String, isOn: Bool = false, action: @escaping () -> Void) -> some View {
+    var body: some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 14, weight: .medium))           // 13 → 14
-                .foregroundStyle(isOn ? t.fg : t.fgMute)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(isOn || isHovered ? fgActive : fgMuted)
                 .frame(maxWidth: .infinity)
-                .frame(height: 32)                                  // 32 ✓
+                .frame(height: 32)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(isHovered ? hoverBg : Color.clear)
+                )
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
     }
 }
 
@@ -156,9 +170,12 @@ private struct SidebarTabRow: View {
     let isDark: Bool
     let onSelect: () -> Void
     let onClose: () -> Void
+    let onRename: (String) -> Void
 
     @State private var isHovered = false
     @State private var attnOpacity: Double = 1.0
+    @State private var isRenaming = false
+    @State private var renameText = ""
 
     private var t: NookTheme { NookTheme(isDark: isDark) }
 
@@ -261,5 +278,21 @@ private struct SidebarTabRow: View {
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.12), value: isHovered)
         .animation(.easeOut(duration: 0.12), value: isActive)
+        .contextMenu {
+            Button("Rename Tab") {
+                renameText = session.title
+                isRenaming = true
+            }
+            Divider()
+            Button("Close Tab", role: .destructive, action: onClose)
+        }
+        .alert("Rename Tab", isPresented: $isRenaming) {
+            TextField("Tab name", text: $renameText)
+            Button("Rename") {
+                let trimmed = renameText.trimmingCharacters(in: .whitespaces)
+                if !trimmed.isEmpty { onRename(trimmed) }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
     }
 }

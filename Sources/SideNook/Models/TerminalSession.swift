@@ -17,6 +17,7 @@ final class TerminalSession: Identifiable {
     let terminalView: SideNookTerminalView
     private let coordinator: SessionCoordinator
     private(set) var processStarted = false
+    private var currentAppearance: NookState.Appearance = .dark
 
     /// Last known working directory — updated by the shell via OSC 7.
     /// Persisted on quit and used to restore the session on next launch.
@@ -78,6 +79,9 @@ final class TerminalSession: Identifiable {
         var env = ProcessInfo.processInfo.environment
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
+        // Hint to color-aware CLIs (Claude Code, bat, delta, etc.) about bg brightness.
+        // "15;0" = light fg on dark bg (dark mode). "0;15" = dark fg on light bg (light mode).
+        env["COLORFGBG"] = currentAppearance == .dark ? "15;0" : "0;15"
         let envArray = env.map { "\($0.key)=\($0.value)" }
         terminalView.startProcess(executable: shell, args: ["-l"], environment: envArray)
 
@@ -102,19 +106,25 @@ final class TerminalSession: Identifiable {
     }
 
     func applyAppearance(_ appearance: NookState.Appearance) {
+        currentAppearance = appearance
         switch appearance {
         case .dark:
             terminalView.nativeBackgroundColor = NSColor(red: 0.114, green: 0.118, blue: 0.141, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
-            // Dark mode: keep same steel-blue highlight; blues in darkPalette are lightened for contrast.
-            terminalView.selectedTextBackgroundColor = NSColor(red: 0.0, green: 0.478, blue: 1.0, alpha: 0.35)
+            // Dark mode: light sky-blue selection — pale enough to read on a dark background.
+            terminalView.selectedTextBackgroundColor = NSColor(red: 0.55, green: 0.80, blue: 1.0, alpha: 0.38)
             terminalView.installColors(Self.darkPalette)
         case .light:
             terminalView.nativeBackgroundColor = NSColor(red: 0.961, green: 0.961, blue: 0.957, alpha: 1)
             terminalView.nativeForegroundColor = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1)
-            // Light mode: baby blue selection matching default macOS terminal highlight.
-            terminalView.selectedTextBackgroundColor = NSColor(red: 0.60, green: 0.78, blue: 0.98, alpha: 0.65)
+            // Light mode: cornflower blue selection — clearly visible on off-white without overwhelming text.
+            terminalView.selectedTextBackgroundColor = NSColor(red: 0.24, green: 0.58, blue: 0.94, alpha: 0.35)
             terminalView.installColors(Self.lightPalette)
+        }
+        // Signal running CLIs (Claude Code, bat, etc.) to re-query terminal background
+        // and redraw with the new colour scheme.
+        if processStarted {
+            kill(terminalView.process.shellPid, SIGWINCH)
         }
     }
 
@@ -125,6 +135,7 @@ final class TerminalSession: Identifiable {
         var env = ProcessInfo.processInfo.environment
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
+        env["COLORFGBG"] = currentAppearance == .dark ? "15;0" : "0;15"
         let envArray = env.map { "\($0.key)=\($0.value)" }
         terminalView.startProcess(executable: shell, args: ["-l"], environment: envArray)
     }

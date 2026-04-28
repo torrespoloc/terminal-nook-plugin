@@ -207,6 +207,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         startObservingState()
         startObservingWindowFocus()
         startStatusPolling()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+            self.checkFullDiskAccess()
+        }
+    }
+
+    private func checkFullDiskAccess() {
+        let defaults = UserDefaults.standard
+        guard !defaults.bool(forKey: "fdaPrompted") else { return }
+        defaults.set(true, forKey: "fdaPrompted")
+
+        let hasAccess = FileManager.default.isReadableFile(
+            atPath: "/Library/Application Support/com.apple.TCC/TCC.db"
+        )
+        guard !hasAccess else { return }
+
+        let alert = NSAlert()
+        alert.messageText = "Allow SideNook Full Disk Access"
+        alert.informativeText = """
+            SideNook runs a terminal shell. Without Full Disk Access, macOS will ask for permission \
+            every session — for Documents, Music, Photos, and more — even when those belong to tools \
+            running inside the terminal (like Claude Code).
+
+            Grant Full Disk Access once and the prompts stop permanently.
+            """
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "Open System Settings")
+        alert.addButton(withTitle: "Not Now")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            NSWorkspace.shared.open(
+                URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles")!
+            )
+        }
     }
 
     /// Polls each session's terminal buffer to drive the `.attn` (yellow dot)

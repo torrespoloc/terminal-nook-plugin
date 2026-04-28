@@ -2,8 +2,9 @@
 import SwiftUI
 
 extension String {
+    // "…" counts toward the limit, so a 22-char limit shows at most 21 chars + "…"
     func truncated(to limit: Int) -> String {
-        count > limit ? prefix(limit) + "…" : self
+        count > limit ? prefix(limit - 1) + "…" : self
     }
 }
 
@@ -50,9 +51,14 @@ struct TabButtonView: View {
         }
     }
 
+    // Fixed layout constants — all tabs are exactly tabWidth wide.
+    // tabWidth = leadPad(10) + dot(7) + gap(6) + textFrame(149) + gap(6) + closeBtn(14) + trailPad(8) = 200
+    private let tabWidth: CGFloat = 200
+    private let textFrameWidth: CGFloat = 149
+
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 7) {
+            HStack(spacing: 6) {
                 Circle()
                     .fill(dotColor)
                     .frame(width: 7, height: 7)
@@ -78,26 +84,24 @@ struct TabButtonView: View {
                 Text(session.title.truncated(to: 22))
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
-                    .fixedSize(horizontal: true, vertical: false)
+                    .lineLimit(1)
+                    .frame(width: textFrameWidth, alignment: .leading)
 
-                if isHovered || isActive {
-                    Spacer(minLength: 0)
-
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(closeFg)
-                            .frame(width: 14, height: 14)
-                            .background(closeHoverBg, in: Circle())
-                    }
-                    .buttonStyle(.plain)
-                    .transition(.opacity.animation(.easeOut(duration: 0.1)))
+                // Always in layout — opacity toggle avoids layout reflow
+                Button(action: onClose) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(closeFg)
+                        .frame(width: 14, height: 14)
+                        .background(closeHoverBg, in: Circle())
                 }
+                .buttonStyle(.plain)
+                .opacity(isHovered || isActive ? 1 : 0)
+                .allowsHitTesting(isHovered || isActive)
             }
             .padding(.leading, 10)
-            .padding(.trailing, isHovered || isActive ? 4 : 10)
-            .frame(height: 26)
-            .frame(minWidth: 84, maxWidth: 174)
+            .padding(.trailing, 8)
+            .frame(width: tabWidth, height: 26)
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(tabBg)

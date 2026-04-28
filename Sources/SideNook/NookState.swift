@@ -53,6 +53,18 @@ final class NookState {
     var showAbout: Bool = false
     var reduceMotion: Bool = false
     var showCommandHelp: Bool = false
+    var showNotes: Bool = false
+
+    // MARK: - CL Notes Persistence
+
+    private static let notesKey = "SideNook.clNotes"
+    static let maxNoteLines = 100
+
+    var clNotes: String = {
+        UserDefaults.standard.string(forKey: NookState.notesKey) ?? ""
+    }() {
+        didSet { UserDefaults.standard.set(clNotes, forKey: Self.notesKey) }
+    }
 
     // Find bar (⌘F) — visible state and query string. Active session only.
     var findVisible: Bool = false

@@ -89,6 +89,11 @@ struct SidebarNavView: View {
                 .padding(.vertical, 8)                              // 6 → 8
             }
 
+            CLNotesView(state: state)
+                .zIndex(1)
+
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
+
             CommandLineHelpView(state: state)
                 .zIndex(1)
 

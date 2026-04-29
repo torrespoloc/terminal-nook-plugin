@@ -47,12 +47,20 @@ struct TabButtonView: View {
         }
     }
 
-    // Tabs flex to fill their container; height stays uniform on the 8pt grid (24pt + 1pt overshoot for visual balance with the 7pt dot).
+    // Tabs hug content; height stays uniform on the 8pt grid (24pt + 1pt overshoot for visual balance with the 7pt dot).
     private let tabHeight: CGFloat = 24
+    private let maxTitleChars = 22
+
+    private var truncatedTitle: String {
+        let title = session.title
+        return title.count > maxTitleChars
+            ? String(title.prefix(maxTitleChars - 1)) + "…"
+            : title
+    }
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Circle()
                     .fill(dotColor)
                     .frame(width: 7, height: 7)
@@ -75,12 +83,11 @@ struct TabButtonView: View {
                         }
                     }
 
-                Text(session.title)
+                Text(truncatedTitle)
                     .font(.system(size: 12, weight: isActive ? .semibold : .medium))
                     .foregroundStyle(fgColor)
                     .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .fixedSize(horizontal: true, vertical: false)
 
                 // Always in layout — opacity toggle avoids layout reflow
                 Button(action: onClose) {
@@ -95,7 +102,7 @@ struct TabButtonView: View {
                 .allowsHitTesting(isHovered || isActive)
             }
             .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: tabHeight)
+            .frame(minHeight: tabHeight)
             .background(
                 RoundedRectangle(cornerRadius: 7, style: .continuous)
                     .fill(tabBg)

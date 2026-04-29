@@ -209,24 +209,32 @@ final class TerminalSession: Identifiable {
     }
 
     private func detectAttentionPrompt() -> Bool {
+        // If the user has scrolled the visible buffer away from the live area,
+        // getLine(row:) reads the scrolled-back viewport (yDisp), not the live
+        // prompt at the bottom. Don't flip the dot back to live just because
+        // they're reading earlier output — preserve the prior attn state.
+        if terminalView.canScroll && terminalView.scrollPosition < 1.0 {
+            return status == .attn
+        }
         let term = terminalView.getTerminal()
         let total = term.rows
         guard total > 0 else { return false }
         let scan = min(total, Self.attnScanRows)
         let start = total - scan
-        var blob = ""
-        for r in start..<total {
+        // Scan bottom-up: TUIs like Claude Code redraw their footer in place,
+        // so an older "esc to interrupt" line can linger above the current
+        // "esc to cancel" prompt. The state closest to the cursor wins.
+        for r in (start..<total).reversed() {
             guard let line = term.getLine(row: r) else { continue }
-            blob += line.translateToString(trimRight: true)
-            blob += "\n"
+            let lower = line.translateToString(trimRight: true).lowercased()
+            if Self.runningIndicators.contains(where: { lower.contains($0) }) {
+                return false
+            }
+            if Self.attnPatterns.contains(where: { lower.contains($0.lowercased()) }) {
+                return true
+            }
         }
-        let lower = blob.lowercased()
-        // Running indicators win — if Claude Code is actively executing, it is
-        // never simultaneously waiting for approval input.
-        if Self.runningIndicators.contains(where: { lower.contains($0) }) {
-            return false
-        }
-        return Self.attnPatterns.contains { lower.contains($0.lowercased()) }
+        return false
     }
 }
 

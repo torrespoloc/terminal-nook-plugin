@@ -126,6 +126,30 @@ struct NookTheme {
     var dotDead: Color { Color(red: 0.973, green: 0.443, blue: 0.443, opacity: 0.60) }
 }
 
+// MARK: - AppKit tokens (for NSViewRepresentable — must be concrete opaque NSColors)
+extension NookTheme {
+    /// Opaque editor background for CLNotesEditorView (AppKit layer).
+    var nsNoteBg: NSColor {
+        isDark ? NSColor(red: 0.082, green: 0.090, blue: 0.125, alpha: 1.0) // #151720
+               : NSColor(white: 0.941, alpha: 1.0)
+    }
+    /// Text color for CL Notes editor.
+    var nsNoteFg: NSColor {
+        isDark ? NSColor(red: 0.922, green: 0.933, blue: 0.961, alpha: 0.92)
+               : NSColor(white: 0.078, alpha: 0.88)
+    }
+    /// Muted color for line numbers in the gutter.
+    var nsNoteGutterFg: NSColor {
+        isDark ? NSColor(red: 0.784, green: 0.804, blue: 0.863, alpha: 0.38)
+               : NSColor(white: 0.40, alpha: 0.35)
+    }
+    /// Hairline separator between gutter and text area.
+    var nsNoteGutterSeparator: NSColor {
+        isDark ? NSColor.white.withAlphaComponent(0.08)
+               : NSColor.black.withAlphaComponent(0.08)
+    }
+}
+
 // MARK: - Color ↔ Hex utilities
 extension Color {
     init?(hex: String) {

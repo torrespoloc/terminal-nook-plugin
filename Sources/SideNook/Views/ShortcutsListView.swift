@@ -24,31 +24,32 @@ struct ShortcutsListView: View {
         ("\u{2318}V",           "Paste"),
     ]
 
+    private let notesShortcuts: [(key: String, action: String)] = [
+        ("\u{2318}C",   "Copy selected text"),
+        ("\u{2318}V",   "Paste"),
+        ("\u{2318}X",   "Cut"),
+        ("\u{2318}Z",   "Undo"),
+        ("\u{2318}A",   "Select All"),
+        ("\u{2318}Z\u{21E7}", "Redo"),
+    ]
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ForEach(shortcuts, id: \.key) { shortcut in
-                HStack {
-                    Text(shortcut.key)
-                        .font(.system(size: 12, weight: .medium, design: .monospaced))
-                        .foregroundStyle(fg)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(
-                            RoundedRectangle(cornerRadius: 4, style: .continuous)
-                                .fill(badgeBg)
-                        )
-                        .frame(width: 64, alignment: .center)
-
-                    Text(shortcut.action)
-                        .font(.system(size: 13))
-                        .foregroundStyle(fgMuted)
-
-                    Spacer()
-                }
+                shortcutRow(shortcut)
             }
 
-            Divider()
-                .padding(.vertical, 2)
+            Divider().padding(.vertical, 2)
+
+            Text("CL Notes")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(fgMuted)
+
+            ForEach(notesShortcuts, id: \.key) { shortcut in
+                shortcutRow(shortcut)
+            }
+
+            Divider().padding(.vertical, 2)
 
             Text("System text shortcuts also apply — three-finger drag, double-tap select, and any custom Accessibility Pointer shortcuts you've configured in System Settings.")
                 .font(.system(size: 11))
@@ -56,5 +57,27 @@ struct ShortcutsListView: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(12)
+    }
+
+    @ViewBuilder
+    private func shortcutRow(_ shortcut: (key: String, action: String)) -> some View {
+        HStack {
+            Text(shortcut.key)
+                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .foregroundStyle(fg)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(badgeBg)
+                )
+                .frame(width: 64, alignment: .center)
+
+            Text(shortcut.action)
+                .font(.system(size: 13))
+                .foregroundStyle(fgMuted)
+
+            Spacer()
+        }
     }
 }

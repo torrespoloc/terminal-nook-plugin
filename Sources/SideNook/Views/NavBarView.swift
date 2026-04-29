@@ -7,16 +7,46 @@ struct NavBarView: View {
     private var t: NookTheme { state.theme }
 
     var body: some View {
+        VStack(spacing: 0) {
+            primaryRow
+            Rectangle().fill(t.stroke1).frame(height: 0.5)
+            secondaryRow
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(t.L2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(t.stroke2, lineWidth: 0.5)
+                )
+                .overlay(alignment: .top) {
+                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [t.innerHighlight, .clear],
+                                startPoint: .top,
+                                endPoint: .center
+                            ),
+                            lineWidth: 0.5
+                        )
+                        .allowsHitTesting(false)
+                }
+                .shadow(color: .black.opacity(0.50), radius: 2, y: 1)
+        )
+        .background(DragHandleView())
+        .padding(EdgeInsets(top: 8, leading: 8, bottom: 6, trailing: 8))
+    }
+
+    // MARK: - Primary row (traffic lights, layout toggle, tabs, +)
+
+    private var primaryRow: some View {
         HStack(spacing: 0) {
-            // ── Traffic lights ────────────────────────
             TrafficLightButtonsView(state: state)
                 .padding(.leading, 8)
                 .padding(.trailing, 6)
 
-            // ── Thin divider ──────────────────────────
             verticalDivider
 
-            // ── Layout toggle (moves panel to sidebar) ─
             NavIconButton(
                 icon: "sidebar.left",
                 isOn: false,
@@ -29,10 +59,8 @@ struct NavBarView: View {
             .help("Switch to Sidebar Layout")
             .padding(.horizontal, 2)
 
-            // ── Thin divider ──────────────────────────
             verticalDivider
 
-            // ── Tabs ─────────────────────────────────
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
                     ForEach(state.sessions) { session in
@@ -60,115 +88,131 @@ struct NavBarView: View {
             }
             .frame(maxWidth: .infinity)
 
-            // ── Thin divider ──────────────────────────
-            verticalDivider
-
-            // ── Action buttons ───────────────────────
-            HStack(spacing: 2) {
-                NavIconButton(icon: "plus", isOn: false, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark, tone: .cta) {
-                    if state.sessions.count < NookState.maxTabs {
-                        state.createSession()
-                    }
+            NavIconButton(
+                icon: "plus",
+                isOn: false,
+                fgMuted: t.fgMute,
+                fgActive: t.fg,
+                isDark: state.isDark,
+                tone: .cta
+            ) {
+                if state.sessions.count < NookState.maxTabs {
+                    state.createSession()
                 }
-                .help("New Tab")
-
-                NavIconButton(
-                    icon: state.isDark ? "sun.max.fill" : "moon.fill",
-                    isOn: false,
-                    fgMuted: t.fgMute,
-                    fgActive: t.fg,
-                    isDark: state.isDark
-                ) {
-                    state.toggleAppearance()
-                }
-                .help(state.isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
-
-                NavIconButton(
-                    icon: state.isPinned ? "pin.fill" : "pin.slash",
-                    isOn: state.isPinned,
-                    fgMuted: t.fgMute,
-                    fgActive: t.fg,
-                    isDark: state.isDark
-                ) {
-                    state.togglePin()
-                }
-                .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
-
-                NavIconButton(
-                    icon: "info.circle",
-                    isOn: state.showCommandHelp,
-                    fgMuted: t.fgMute,
-                    fgActive: t.fg,
-                    isDark: state.isDark
-                ) {
-                    if state.canTogglePopover() { state.showCommandHelp.toggle() }
-                }
-                .help("Command Line Help")
-                .popover(
-                    isPresented: Binding(
-                        get: { state.showCommandHelp },
-                        set: { newValue in
-                            if !newValue && state.showCommandHelp { state.notePopoverDismissed() }
-                            state.showCommandHelp = newValue
-                        }
-                    ),
-                    attachmentAnchor: .point(.bottom),
-                    arrowEdge: .top
-                ) {
-                    CommandLineHelpView(state: state, showsTrigger: false)
-                }
-
-                NavIconButton(
-                    icon: "gearshape",
-                    isOn: state.showSettings,
-                    fgMuted: t.fgMute,
-                    fgActive: t.fg,
-                    isDark: state.isDark
-                ) {
-                    if state.canTogglePopover() { state.showSettings.toggle() }
-                }
-                .help("Settings")
-                .popover(
-                    isPresented: Binding(
-                        get: { state.showSettings },
-                        set: { newValue in
-                            if !newValue && state.showSettings { state.notePopoverDismissed() }
-                            state.showSettings = newValue
-                        }
-                    ),
-                    attachmentAnchor: .point(.bottom),
-                    arrowEdge: .top
-                ) {
-                    SettingsPopoverView(state: state)
-                }
-
             }
+            .help("New Tab")
             .padding(.horizontal, 6)
         }
         .frame(height: 40)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(t.L2)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(t.stroke2, lineWidth: 0.5)
-                )
-                .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .strokeBorder(
-                            LinearGradient(
-                                colors: [t.innerHighlight, .clear],
-                                startPoint: .top,
-                                endPoint: .center
-                            ),
-                            lineWidth: 0.5
-                        )
-                        .allowsHitTesting(false)
-                }
-                .shadow(color: .black.opacity(0.50), radius: 2, y: 1)
-        )
-        .background(DragHandleView())
-        .padding(EdgeInsets(top: 8, leading: 8, bottom: 6, trailing: 8))
+    }
+
+    // MARK: - Secondary row (CL Notes, Help · theme, pin, settings)
+
+    private var secondaryRow: some View {
+        HStack(spacing: 4) {
+            NavTriggerButton(
+                icon: "note.text",
+                label: "CL Notes",
+                isOn: state.showNotes,
+                isDark: state.isDark,
+                trailing: { AnyView(noteCounter) }
+            ) {
+                if state.canTogglePopover() { state.showNotes.toggle() }
+            }
+            .popover(
+                isPresented: Binding(
+                    get: { state.showNotes },
+                    set: { newValue in
+                        if !newValue && state.showNotes { state.notePopoverDismissed() }
+                        state.showNotes = newValue
+                    }
+                ),
+                attachmentAnchor: .point(.bottom),
+                arrowEdge: .top
+            ) {
+                CLNotesView(state: state, showsTrigger: false)
+            }
+
+            NavTriggerButton(
+                icon: "info.circle",
+                label: "Command Line Help",
+                isOn: state.showCommandHelp,
+                isDark: state.isDark
+            ) {
+                if state.canTogglePopover() { state.showCommandHelp.toggle() }
+            }
+            .popover(
+                isPresented: Binding(
+                    get: { state.showCommandHelp },
+                    set: { newValue in
+                        if !newValue && state.showCommandHelp { state.notePopoverDismissed() }
+                        state.showCommandHelp = newValue
+                    }
+                ),
+                attachmentAnchor: .point(.bottom),
+                arrowEdge: .top
+            ) {
+                CommandLineHelpView(state: state, showsTrigger: false)
+            }
+
+            Spacer(minLength: 0)
+
+            NavIconButton(
+                icon: state.isDark ? "sun.max.fill" : "moon.fill",
+                isOn: false,
+                fgMuted: t.fgMute,
+                fgActive: t.fg,
+                isDark: state.isDark
+            ) {
+                state.toggleAppearance()
+            }
+            .help(state.isDark ? "Switch to Light Mode" : "Switch to Dark Mode")
+
+            NavIconButton(
+                icon: state.isPinned ? "pin.fill" : "pin.slash",
+                isOn: state.isPinned,
+                fgMuted: t.fgMute,
+                fgActive: t.fg,
+                isDark: state.isDark
+            ) {
+                state.togglePin()
+            }
+            .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
+
+            NavIconButton(
+                icon: "gearshape",
+                isOn: state.showSettings,
+                fgMuted: t.fgMute,
+                fgActive: t.fg,
+                isDark: state.isDark
+            ) {
+                if state.canTogglePopover() { state.showSettings.toggle() }
+            }
+            .help("Settings")
+            .popover(
+                isPresented: Binding(
+                    get: { state.showSettings },
+                    set: { newValue in
+                        if !newValue && state.showSettings { state.notePopoverDismissed() }
+                        state.showSettings = newValue
+                    }
+                ),
+                attachmentAnchor: .point(.bottom),
+                arrowEdge: .top
+            ) {
+                SettingsPopoverView(state: state)
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(height: 32)
+    }
+
+    private var noteCounter: some View {
+        let count = state.clNotes.isEmpty ? 0 : state.clNotes.components(separatedBy: "\n").count
+        let atCap = count >= NookState.maxNoteLines
+        return Text("\(count)/\(NookState.maxNoteLines)")
+            .font(.system(size: 10, design: .monospaced))
+            .foregroundStyle(atCap ? t.dotAttn : t.fgMute)
     }
 
     // MARK: - Components
@@ -190,6 +234,63 @@ struct NavBarView: View {
         Rectangle()
             .fill(t.stroke1)
             .frame(width: 0.5, height: 20)
+    }
+}
+
+// MARK: - Nav Trigger Button (icon + label + chevron, with optional trailing accessory)
+
+struct NavTriggerButton: View {
+    let icon: String
+    let label: String
+    let isOn: Bool
+    let isDark: Bool
+    var trailing: (() -> AnyView)? = nil
+    let action: () -> Void
+
+    @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
+    private var bgFill: Color {
+        if isOn      { return t.L3 }
+        if isHovered { return t.hoverBg }
+        return Color.clear
+    }
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(t.fgMid)
+
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(t.fgMid)
+                    .fixedSize(horizontal: true, vertical: false)
+
+                if let trailing { trailing() }
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(t.fgMute)
+                    .rotationEffect(.degrees(isOn ? 180 : 0))
+                    .animation(.easeOut(duration: 0.15), value: isOn)
+            }
+            .padding(.horizontal, 8)
+            .frame(height: 24)
+            .background(
+                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                    .fill(bgFill)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            .strokeBorder(isOn ? t.stroke3 : .clear, lineWidth: 0.5)
+                    )
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
+        .animation(.easeOut(duration: 0.12), value: isHovered)
     }
 }
 

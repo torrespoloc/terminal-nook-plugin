@@ -51,7 +51,7 @@ Default panel size: 450×600pt. Width auto-adjusts to 720pt (topBar) or 820pt (l
 ## Terminal content size math
 `NookState.terminalContentSize(for:)` computes the exact PTY dimensions — do not replicate this math elsewhere.
 - `leftSidebar`: width = `expandedSize.width - 202` (8 lead + 180 sidebar + 6 HStack spacing + 8 trail), height = `expandedSize.height - 24`
-- `topBar`: width = `expandedSize.width - 16`, height = `expandedSize.height - 78` (NavBar 54 + top 16 + bottom 8)
+- `topBar`: width = `expandedSize.width - 16`, height = `expandedSize.height - 110` (NavBar 86 [40 row1 + 0.5 divider + 32 row2 + 8 top pad + 6 bottom pad] + top 16 + bottom 8)
 
 Always pass the result of `terminalContentSize(for:)` when creating a `TerminalSession`. The PTY column/row count must match the actual rendered size or output will wrap incorrectly.
 

@@ -129,16 +129,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return nil
             case "v":
+                // Let NSTextView (notes editor, find bar, etc.) handle paste natively
+                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.terminalView.paste(session.terminalView)
                 }
                 return nil
             case "c":
+                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.terminalView.copy(session.terminalView)
                 }
                 return nil
+            case "x":
+                // Cut — only meaningful in text editors; no terminal equivalent
+                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
+                return nil
             case "z":
+                // Undo: notes editor uses NSTextView undo; terminal uses readline undo
+                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.send(text: "\u{1f}")
                 }
@@ -232,6 +241,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         startObservingState()
+        startObservingActiveSession()
         startObservingWindowFocus()
         startStatusPolling()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
@@ -375,6 +385,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.async {
                 self?.applyStateChange()
                 self?.startObservingState()
+            }
+        }
+    }
+
+    private func startObservingActiveSession() {
+        withObservationTracking {
+            _ = state.activeSessionID
+        } onChange: { [weak self] in
+            DispatchQueue.main.async {
+                guard let self, let session = self.state.activeSession else { return }
+                self.panel.makeFirstResponder(session.terminalView)
+                self.startObservingActiveSession()
             }
         }
     }

@@ -92,7 +92,7 @@ struct TabButtonView: View {
                 // Always in layout — opacity toggle avoids layout reflow
                 Button(action: onClose) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 9, weight: .bold))
+                        .font(NookType.closeGlyph)
                         .foregroundStyle(closeFg)
                         .frame(width: 14, height: 14)
                         .background(closeHoverBg, in: Circle())
@@ -104,10 +104,10 @@ struct TabButtonView: View {
             .padding(.horizontal, 8)
             .frame(minHeight: tabHeight)
             .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                     .fill(tabBg)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                             .strokeBorder(isActive ? tabBorder : .clear, lineWidth: 0.5)
                     )
                     .shadow(
@@ -117,7 +117,7 @@ struct TabButtonView: View {
                     )
                     .overlay(alignment: .top) {
                         if isActive {
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                                 .strokeBorder(
                                     LinearGradient(
                                         colors: [innerHighlight, .clear],
@@ -155,5 +155,104 @@ struct TabButtonView: View {
         .onDrag {
             NSItemProvider(object: session.id.uuidString as NSString)
         }
+    }
+}
+
+
+// MARK: - Notes Tab Button (top-bar layout)
+
+struct NotesTabButton: View {
+    let isDark: Bool
+    let onClose: () -> Void
+
+    @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
+    private let tabHeight: CGFloat = 24
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "note.text")
+                .font(NookType.micro)
+                .foregroundStyle(t.fg)
+                .frame(width: 10, height: 10)
+
+            Text("My Notes")
+                .font(NookType.labelEmph)
+                .foregroundStyle(t.fg)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(NookType.closeGlyph)
+                    .foregroundStyle(t.fgMid)
+                    .frame(width: 14, height: 14)
+                    .background(t.stroke2, in: Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .frame(minHeight: tabHeight)
+        .background(
+            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                .fill(t.L3)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                        .strokeBorder(t.stroke3, lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+    }
+}
+
+// MARK: - Help Tab Button (top-bar layout)
+
+struct HelpTabButton: View {
+    let isDark: Bool
+    let onClose: () -> Void
+
+    @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
+    private let tabHeight: CGFloat = 24
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "info.circle")
+                .font(NookType.micro)
+                .foregroundStyle(t.fg)
+                .frame(width: 10, height: 10)
+
+            Text("CL Help")
+                .font(NookType.labelEmph)
+                .foregroundStyle(t.fg)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(NookType.closeGlyph)
+                    .foregroundStyle(t.fgMid)
+                    .frame(width: 14, height: 14)
+                    .background(t.stroke2, in: Circle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 8)
+        .frame(minHeight: tabHeight)
+        .background(
+            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                .fill(t.L3)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                        .strokeBorder(t.stroke3, lineWidth: 0.5)
+                )
+                .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
     }
 }

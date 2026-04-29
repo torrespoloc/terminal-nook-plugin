@@ -18,6 +18,13 @@ final class NookState {
         case left, right, top, bottom
     }
 
+    /// Quadrant-derived corner that the pill anchors to within the panel frame.
+    /// Tracks (dockedEdge, pillEdgeOffset vs screen midpoint) so the pill stays
+    /// pinned in the same screen corner across the expand/collapse transition.
+    enum PillCorner {
+        case topLeading, topTrailing, bottomLeading, bottomTrailing
+    }
+
     enum Appearance: String {
         case dark, light
     }
@@ -30,6 +37,7 @@ final class NookState {
     var isPinned: Bool = false
     var panelPosition: CGPoint
     var pillEdgeOffset: CGFloat = 0  // X for top/bottom edges; Y for left/right edges
+    var pillCorner: PillCorner = .topLeading
     var expandedSize: CGSize = CGSize(width: 450, height: 600)
     var dockedEdge: ScreenEdge = .top
     var appearance: Appearance = .dark
@@ -55,15 +63,24 @@ final class NookState {
     var showCommandHelp: Bool = false
     var showNotes: Bool = false
 
-    // MARK: - CL Notes Persistence
+    /// When true, the panel content area shows the full notes editor in place
+    /// of the active terminal session. Set by "Open as Tab"; cleared when the
+    /// user selects any regular terminal tab.
+    var notesTabActive: Bool = false
 
-    private static let notesKey = "SideNook.clNotes"
+    /// When true, the panel content area shows the full Command Line Help
+    /// reference in place of the active terminal session. Mirrors notesTabActive.
+    var helpTabActive: Bool = false
+
+    // MARK: - Notes Persistence
+
+    private static let notesKey = "SideNook.Notes"
     static let maxNoteLines = 100
 
-    var clNotes: String = {
+    var Notes: String = {
         UserDefaults.standard.string(forKey: NookState.notesKey) ?? ""
     }() {
-        didSet { UserDefaults.standard.set(clNotes, forKey: Self.notesKey) }
+        didSet { UserDefaults.standard.set(Notes, forKey: Self.notesKey) }
     }
 
     // Find bar (⌘F) — visible state and query string. Active session only.
@@ -75,15 +92,40 @@ final class NookState {
     /// the popover, dismissing it, and SwiftUI then delivers the same click to
     /// the Button — without this guard the action toggles the popover back on,
     /// requiring a double-click to actually close it.
+    /// Per-popover dismissal timestamps. Keyed so that closing popover A doesn't
+    /// debounce a click on popover B's trigger button (the previous global
+    /// timestamp made Notes need two clicks when CL Help was open).
     @ObservationIgnored
-    private var lastPopoverDismiss: Date = .distantPast
+    private var lastPopoverDismiss: [String: Date] = [:]
 
-    func canTogglePopover() -> Bool {
-        Date().timeIntervalSince(lastPopoverDismiss) >= 0.25
+    func canTogglePopover(_ key: String = "_global") -> Bool {
+        Date().timeIntervalSince(lastPopoverDismiss[key] ?? .distantPast) >= 0.25
     }
 
-    func notePopoverDismissed() {
-        lastPopoverDismiss = Date()
+    func notePopoverDismissed(_ key: String = "_global") {
+        lastPopoverDismiss[key] = Date()
+    }
+
+    // MARK: - Notes Tab
+
+    func openNotesTab() {
+        notesTabActive = true
+        helpTabActive = false
+        showNotes = false  // auto-collapse the inline drawer
+    }
+
+    func closeNotesTab() {
+        notesTabActive = false
+    }
+
+    func openHelpTab() {
+        helpTabActive = true
+        notesTabActive = false
+        showCommandHelp = false
+    }
+
+    func closeHelpTab() {
+        helpTabActive = false
     }
 
     // Tab/session management
@@ -184,9 +226,37 @@ final class NookState {
         let topOffset = frame.maxY - 128 - topInset  // 128 = pillHeight
         self.panelPosition = CGPoint(x: frame.minX, y: topOffset)
         self.pillEdgeOffset = topOffset
+        self.pillCorner = Self.derivePillCorner(
+            edge: .left, offset: topOffset, screenFrame: frame
+        )
         // Restore previous sessions, or create a fresh one if none saved.
         restoreSessionSnapshots()
         if sessions.isEmpty { createSession() }
+    }
+
+    /// Derive the pill's anchor corner from its docked edge + offset relative to
+    /// the screen midpoint. macOS coords are bottom-up: high Y = top half.
+    static func derivePillCorner(
+        edge: ScreenEdge, offset: CGFloat, screenFrame: NSRect
+    ) -> PillCorner {
+        let pillLength = AppDelegate.Constants.pillHeight
+        let center = offset + pillLength / 2
+        switch edge {
+        case .left:
+            return center >= screenFrame.midY ? .topLeading : .bottomLeading
+        case .right:
+            return center >= screenFrame.midY ? .topTrailing : .bottomTrailing
+        case .top:
+            return center < screenFrame.midX ? .topLeading : .topTrailing
+        case .bottom:
+            return center < screenFrame.midX ? .bottomLeading : .bottomTrailing
+        }
+    }
+
+    func updatePillCorner(in screenFrame: NSRect) {
+        pillCorner = Self.derivePillCorner(
+            edge: dockedEdge, offset: pillEdgeOffset, screenFrame: screenFrame
+        )
     }
 
     func expand() {
@@ -279,6 +349,8 @@ final class NookState {
 
     func switchToSession(_ id: UUID) {
         activeSessionID = id
+        notesTabActive = false
+        helpTabActive = false
     }
 
     func reorderSessions(fromID: UUID, toID: UUID) {

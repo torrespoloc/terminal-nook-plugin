@@ -6,7 +6,7 @@ struct AboutView: View {
     let onDismiss: () -> Void
 
     private var t: NookTheme { NookTheme(isDark: isDark) }
-    private var bg: Color { isDark ? NookTheme.darkL3 : Color(white: 0.96) }
+    private var bg: Color { t.aboutBg }
     private var fg: Color { t.fg }
     private var fgMid: Color { t.fgMid }
     private var fgMuted: Color { t.fgMute }
@@ -21,7 +21,7 @@ struct AboutView: View {
                 Spacer()
                 Button(action: onDismiss) {
                     Image(systemName: "xmark")
-                        .font(.system(size: 11, weight: .bold))
+                        .font(NookType.captionBold)
                         .foregroundStyle(fgMuted)
                         .frame(width: 22, height: 22)
                         .background(
@@ -36,20 +36,20 @@ struct AboutView: View {
             // App icon + name
             VStack(spacing: 8) {
                 Image(systemName: "terminal.fill")
-                    .font(.system(size: 28, weight: .medium))
+                    .font(NookType.heroXL)
                     .foregroundStyle(accentColor)
                     .frame(width: 54, height: 54)
                     .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.xl, style: .continuous)
                             .fill(t.L3)
                     )
 
                 Text("SideNook")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(NookType.heroM)
                     .foregroundStyle(fg)
 
                 Text("A lightweight floating terminal panel for macOS")
-                    .font(.system(size: 12))
+                    .font(NookType.labelReg)
                     .foregroundStyle(fgMuted)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -66,15 +66,15 @@ struct AboutView: View {
                 .padding(.horizontal, 20)
 
             // Credits
-            VStack(spacing: 6) {
+            VStack(spacing: 8) {
                 Text("Created by Jacki")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(NookType.bodyEmph)
                     .foregroundStyle(fg)
                 Text("AI Product Designer")
-                    .font(.system(size: 12))
+                    .font(NookType.labelReg)
                     .foregroundStyle(fgMid)
                 Text("2026  \u{00B7}  MIT License")
-                    .font(.system(size: 12))
+                    .font(NookType.labelReg)
                     .foregroundStyle(fgMid)
                 Button(action: {
                     if let url = URL(string: "https://www.linkedin.com/in/jackelinetorres/") {
@@ -85,59 +85,59 @@ struct AboutView: View {
                         Image(systemName: "link")
                             .font(.system(size: 10, weight: .bold))
                         Text("LinkedIn")
-                            .font(.system(size: 12, weight: .medium))
+                            .font(NookType.label)
                     }
                     .foregroundStyle(fgMuted)
                     .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.vertical, 8)
                     .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.sm, style: .continuous)
                             .fill(t.hoverBg)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                RoundedRectangle(cornerRadius: NookRadius.sm, style: .continuous)
                                     .strokeBorder(t.stroke2, lineWidth: 0.5)
                             )
                     )
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.vertical, 14)
+            .padding(.vertical, 16)
 
             Rectangle().fill(dividerColor).frame(height: 0.5)
                 .padding(.horizontal, 20)
 
             // How to update
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text("How to Update")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(NookType.bodyEmph)
                     .foregroundStyle(fg)
 
                 Text("Pull the latest from GitHub and run:")
-                    .font(.system(size: 12))
+                    .font(NookType.labelReg)
                     .foregroundStyle(fgMuted)
 
                 Text("make install")
-                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                    .font(NookType.labelMono)
                     .foregroundStyle(fg)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.sm, style: .continuous)
                             .fill(codeBg)
                     )
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 14)
+            .padding(.vertical, 16)
 
             Rectangle().fill(dividerColor).frame(height: 0.5)
                 .padding(.horizontal, 20)
 
             Text("SideNook is free and open source software.")
-                .font(.system(size: 12))
+                .font(NookType.labelReg)
                 .foregroundStyle(fgMuted)
                 .multilineTextAlignment(.center)
-                .padding(.vertical, 14)
+                .padding(.vertical, 16)
                 .padding(.bottom, 4)
         }
         .frame(width: 300)

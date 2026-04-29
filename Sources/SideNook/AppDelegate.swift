@@ -86,6 +86,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let shift = event.modifierFlags.contains(.shift)
             let chars = event.charactersIgnoringModifiers ?? ""
 
+            // Popovers (Notes, CL Help) host in their own window, so
+            // NSApp.keyWindow may not match. Check event window + all visible
+            // windows for any NSText (covers NSTextView and field editors).
+            func isEditingText() -> Bool {
+                if let r = event.window?.firstResponder, r is NSText { return true }
+                if let r = NSApp.keyWindow?.firstResponder, r is NSText { return true }
+                for w in NSApp.windows where w.isVisible {
+                    if let r = w.firstResponder, r is NSText { return true }
+                }
+                return false
+            }
+
             // Any keystroke that reaches the terminal (i.e. not consumed as a
             // Cmd-shortcut below) counts as user input — flip the active
             // session from .idle → .live so its dot turns green.
@@ -94,6 +106,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return event
             }
             guard cmd else { return event }
+
+            // If a text editor (notes, find bar, popover field) is focused,
+            // let standard editing shortcuts pass through to it.
+            if isEditingText() {
+                switch chars {
+                case "a", "c", "v", "x", "z", "Z":
+                    return event
+                default:
+                    break
+                }
+            }
 
             switch chars {
             case "+", "=":
@@ -129,31 +152,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return nil
             case "v":
-                // Let NSTextView (notes editor, find bar, etc.) handle paste natively
-                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.terminalView.paste(session.terminalView)
                 }
                 return nil
             case "c":
-                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.terminalView.copy(session.terminalView)
                 }
                 return nil
             case "x":
-                // Cut — only meaningful in text editors; no terminal equivalent
-                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 return nil
             case "z":
-                // Undo: notes editor uses NSTextView undo; terminal uses readline undo
-                if NSApp.keyWindow?.firstResponder is NSTextView { return event }
                 if let session = self.state.activeSession {
                     session.send(text: "\u{1f}")
                 }
                 return nil
             case ",":
-                if self.state.canTogglePopover() { self.state.showSettings.toggle() }
+                if self.state.canTogglePopover("settings") { self.state.showSettings.toggle() }
                 return nil
             case "q":
                 NSApp.terminate(nil)
@@ -514,32 +530,37 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// Expanded origin — derived from the stable pillEdgeOffset anchor.
-    /// Top/bottom: aligns left or right edge of window with pill based on 50% breakpoint.
-    /// Left/right: centers vertically on pill midpoint.
+    /// Quadrant-aware: anchors the corresponding window corner to the pill's corner
+    /// so the pill keeps the same screen position when the panel grows.
     private func expandedOrigin(screenFrame: NSRect) -> CGPoint {
         let offset = state.pillEdgeOffset
         let w = state.expandedSize.width
         let h = state.expandedSize.height
+        let pillLen = Constants.pillHeight
         switch state.dockedEdge {
         case .left:
-            return CGPoint(x: screenFrame.minX,
-                           y: offset + Constants.pillHeight / 2 - h / 2)
+            // Top quadrant: window top edge aligns with pill top → origin.y + h = offset + pillLen.
+            // Bottom quadrant: window bottom edge aligns with pill bottom → origin.y = offset.
+            let topQuadrant = offset + pillLen / 2 >= screenFrame.midY
+            let y = topQuadrant ? offset + pillLen - h : offset
+            return CGPoint(x: screenFrame.minX, y: y)
         case .right:
-            return CGPoint(x: screenFrame.maxX - w,
-                           y: offset + Constants.pillHeight / 2 - h / 2)
+            let topQuadrant = offset + pillLen / 2 >= screenFrame.midY
+            let y = topQuadrant ? offset + pillLen - h : offset
+            return CGPoint(x: screenFrame.maxX - w, y: y)
         case .top:
-            let pillCenterX = offset + Constants.pillHeight / 2
+            let pillCenterX = offset + pillLen / 2
             if pillCenterX < screenFrame.midX {
                 return CGPoint(x: offset, y: screenFrame.maxY - h)
             } else {
-                return CGPoint(x: offset + Constants.pillHeight - w, y: screenFrame.maxY - h)
+                return CGPoint(x: offset + pillLen - w, y: screenFrame.maxY - h)
             }
         case .bottom:
-            let pillCenterX = offset + Constants.pillHeight / 2
+            let pillCenterX = offset + pillLen / 2
             if pillCenterX < screenFrame.midX {
                 return CGPoint(x: offset, y: screenFrame.minY)
             } else {
-                return CGPoint(x: offset + Constants.pillHeight - w, y: screenFrame.minY)
+                return CGPoint(x: offset + pillLen - w, y: screenFrame.minY)
             }
         }
     }
@@ -581,6 +602,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
             state.dockedEdge = edge
             state.pillEdgeOffset = nextOffset
+            state.updatePillCorner(in: screenFrame)
         }
     }
 

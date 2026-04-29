@@ -5,7 +5,7 @@ struct SettingsPopoverView: View {
     @Bindable var state: NookState
 
     private var t: NookTheme { state.theme }
-    private var bg: Color { state.isDark ? NookTheme.darkL3 : Color(white: 0.97) }
+    private var bg: Color { t.aboutBg }
     private var cardBg: Color { t.groupBg }
     private var cardStroke: Color { t.hoverBg }
     private var fg: Color { t.fg }
@@ -35,10 +35,10 @@ struct SettingsPopoverView: View {
                                 .frame(width: 14, height: 14)
                                 .frame(width: 16, height: 16)
                             Text("Accent Color")
-                                .font(.system(size: 14))
+                                .font(NookType.formValue)
                                 .foregroundStyle(fg)
                         }
-                        HStack(spacing: 5) {
+                        HStack(spacing: 4) {
                             ForEach(accentPresets, id: \.hex) { preset in
                                 accentSwatchButton(hex: preset.hex, name: preset.name)
                             }
@@ -52,36 +52,36 @@ struct SettingsPopoverView: View {
                 settingsCard {
                     HStack(spacing: 8) {
                         Image(systemName: "textformat.size")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(NookType.body)
                             .foregroundStyle(fgMuted)
                             .frame(width: 16)
                         Text("Font Size")
-                            .font(.system(size: 14))
+                            .font(NookType.formValue)
                             .foregroundStyle(fg)
                         Spacer()
                         HStack(spacing: 4) {
                             Button(action: { state.zoomOut() }) {
                                 Image(systemName: "minus")
-                                    .font(.system(size: 11, weight: .bold))
+                                    .font(NookType.captionBold)
                                     .foregroundStyle(fgMuted)
                                     .frame(width: 20, height: 20)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                        RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                                             .fill(t.groupBg)
                                     )
                             }
                             .buttonStyle(.plain)
                             Text("\(Int(state.fontSize))")
-                                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                                .font(NookType.bodyMonoEmph)
                                 .foregroundStyle(fg)
                                 .frame(width: 26)
                             Button(action: { state.zoomIn() }) {
                                 Image(systemName: "plus")
-                                    .font(.system(size: 11, weight: .bold))
+                                    .font(NookType.captionBold)
                                     .foregroundStyle(fgMuted)
                                     .frame(width: 20, height: 20)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                        RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                                             .fill(t.groupBg)
                                     )
                             }
@@ -96,11 +96,11 @@ struct SettingsPopoverView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(spacing: 8) {
                             Image(systemName: "rectangle.dashed")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(NookType.body)
                                 .foregroundStyle(fgMuted)
                                 .frame(width: 16)
                             Text("Dock Position")
-                                .font(.system(size: 14))
+                                .font(NookType.formValue)
                                 .foregroundStyle(fg)
                         }
                         HStack(spacing: 4) {
@@ -112,7 +112,7 @@ struct SettingsPopoverView: View {
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, 4)
                                         .background(
-                                            RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                            RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                                                 .fill(state.dockedEdge == edge ? segmentActiveBg : Color.clear)
                                         )
                                 }
@@ -126,11 +126,11 @@ struct SettingsPopoverView: View {
 
                     HStack(spacing: 8) {
                         Image(systemName: "arrow.up.circle")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(NookType.body)
                             .foregroundStyle(fgMuted)
                             .frame(width: 16)
                         Text("Launch at Login")
-                            .font(.system(size: 14))
+                            .font(NookType.formValue)
                             .foregroundStyle(fg)
                         Spacer()
                         NookToggle(isOn: Binding(get: { state.launchAtLogin }, set: { state.launchAtLogin = $0 }), theme: t)
@@ -141,11 +141,11 @@ struct SettingsPopoverView: View {
 
                     HStack(spacing: 8) {
                         Image(systemName: "hand.raised")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(NookType.body)
                             .foregroundStyle(fgMuted)
                             .frame(width: 16)
                         Text("Reduce Motion")
-                            .font(.system(size: 14))
+                            .font(NookType.formValue)
                             .foregroundStyle(fg)
                         Spacer()
                         NookToggle(isOn: $state.reduceMotion, theme: t)
@@ -158,15 +158,15 @@ struct SettingsPopoverView: View {
                     Button(action: { withAnimation(.easeOut(duration: 0.15)) { showShortcuts.toggle() } }) {
                         HStack(spacing: 8) {
                             Image(systemName: "keyboard")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(NookType.body)
                                 .foregroundStyle(fgMuted)
                                 .frame(width: 16)
                             Text("Keyboard Shortcuts")
-                                .font(.system(size: 14))
+                                .font(NookType.formValue)
                                 .foregroundStyle(fg)
                             Spacer()
                             Image(systemName: showShortcuts ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(NookType.captionEmph)
                                 .foregroundStyle(fgMuted)
                         }
                         .padding(12)
@@ -182,13 +182,13 @@ struct SettingsPopoverView: View {
                     sectionDivider
 
                     settingsRow(icon: "info.circle", label: "About SideNook", showChevron: true) {
-                        if state.canTogglePopover() { state.showAbout.toggle() }
+                        if state.canTogglePopover("about") { state.showAbout.toggle() }
                     }
                     .popover(
                         isPresented: Binding(
                             get: { state.showAbout },
                             set: { newValue in
-                                if !newValue && state.showAbout { state.notePopoverDismissed() }
+                                if !newValue && state.showAbout { state.notePopoverDismissed("about") }
                                 state.showAbout = newValue
                             }
                         ),
@@ -202,15 +202,15 @@ struct SettingsPopoverView: View {
                     Button(action: { NSApplication.shared.terminate(nil) }) {
                         HStack(spacing: 8) {
                             Image(systemName: "power")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(NookType.body)
                                 .foregroundStyle(t.danger)
                                 .frame(width: 16)
                             Text("Quit SideNook")
-                                .font(.system(size: 14))
+                                .font(NookType.formValue)
                                 .foregroundStyle(t.danger)
                             Spacer()
                             Text("⌘Q")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(NookType.captionEmph)
                                 .foregroundStyle(t.fgMute)
                         }
                         .padding(12)
@@ -235,10 +235,10 @@ struct SettingsPopoverView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                 .fill(cardBg)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                         .strokeBorder(cardStroke, lineWidth: 0.5)
                 )
         )
@@ -255,16 +255,16 @@ struct SettingsPopoverView: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 13, weight: .medium))
+                    .font(NookType.body)
                     .foregroundStyle(fgMuted)
                     .frame(width: 16)
                 Text(label)
-                    .font(.system(size: 14))
+                    .font(NookType.formValue)
                     .foregroundStyle(fg)
                 Spacer()
                 if showChevron {
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(NookType.captionEmph)
                         .foregroundStyle(t.fgMute)
                 }
             }
@@ -280,10 +280,10 @@ struct SettingsPopoverView: View {
             Text(label)
                 .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(isSelected ? fg : fgMuted)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
                 .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .fill(isSelected ? segmentActiveBg : Color.clear)
                 )
         }
@@ -309,20 +309,20 @@ struct SettingsPopoverView: View {
         return Button(action: { state.accentHex = hex }) {
             ZStack {
                 if isSelected {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.sm, style: .continuous)
                         .strokeBorder(color, lineWidth: 1.5)
                         .frame(width: 40, height: 24)
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .strokeBorder(bg, lineWidth: 2)
                         .frame(width: 37, height: 21)
                 }
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                     .fill(color)
                     .frame(width: 34, height: 18)
                     .overlay(
                         Group {
                             if !isSelected {
-                                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                                     .strokeBorder(t.stroke3, lineWidth: 0.5)
                             }
                         }
@@ -341,18 +341,18 @@ struct SettingsPopoverView: View {
             // Visual layer — non-interactive
             ZStack {
                 if isCustomAccent {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.sm, style: .continuous)
                         .strokeBorder(currentColor, lineWidth: 1.5)
                         .frame(width: 40, height: 24)
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .strokeBorder(bg, lineWidth: 2)
                         .frame(width: 37, height: 21)
                 }
-                RoundedRectangle(cornerRadius: 4, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                     .fill(currentColor)
                     .frame(width: 34, height: 18)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                             .strokeBorder(t.fgMute, style: StrokeStyle(lineWidth: 1.2, dash: [2.5, 2]))
                     )
             }

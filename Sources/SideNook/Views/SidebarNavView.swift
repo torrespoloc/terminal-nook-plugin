@@ -49,14 +49,14 @@ struct SidebarNavView: View {
                 .help(state.isPinned ? "Unpin Panel" : "Pin Panel Open")
 
                 SidebarIconButton(icon: "gearshape", isOn: state.showSettings, fgMuted: t.fgMute, fgActive: t.fg, isDark: state.isDark) {
-                    if state.canTogglePopover() { state.showSettings.toggle() }
+                    if state.canTogglePopover("settings") { state.showSettings.toggle() }
                 }
                 .help("Settings")
                 .popover(
                     isPresented: Binding(
                         get: { state.showSettings },
                         set: { newValue in
-                            if !newValue && state.showSettings { state.notePopoverDismissed() }
+                            if !newValue && state.showSettings { state.notePopoverDismissed("settings") }
                             state.showSettings = newValue
                         }
                     ),
@@ -74,10 +74,22 @@ struct SidebarNavView: View {
             // ── Tab list ──────────────────────────────
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 4) {                                // 3 → 4
+                    if state.notesTabActive {
+                        NotesTabRow(
+                            isDark: state.isDark,
+                            onClose: { state.closeNotesTab() }
+                        )
+                    }
+                    if state.helpTabActive {
+                        HelpTabRow(
+                            isDark: state.isDark,
+                            onClose: { state.closeHelpTab() }
+                        )
+                    }
                     ForEach(state.sessions) { session in
                         SidebarTabRow(
                             session: session,
-                            isActive: session.id == state.activeSessionID,
+                            isActive: session.id == state.activeSessionID && !state.notesTabActive && !state.helpTabActive,
                             isDark: state.isDark,
                             onSelect: { state.switchToSession(session.id) },
                             onClose: { state.closeSession(session.id) },
@@ -89,7 +101,7 @@ struct SidebarNavView: View {
                 .padding(.vertical, 8)                              // 6 → 8
             }
 
-            CLNotesView(state: state)
+            NotesView(state: state)
                 .zIndex(1)
 
             Rectangle().fill(t.stroke1).frame(height: 0.5)
@@ -108,14 +120,14 @@ struct SidebarNavView: View {
         }
         .frame(width: 180)
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                 .fill(t.L2)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                         .strokeBorder(t.stroke2, lineWidth: 0.5)
                 )
                 .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                         .strokeBorder(
                             LinearGradient(
                                 colors: [t.innerHighlight, .clear],
@@ -169,7 +181,7 @@ private struct SidebarIconButton: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 32)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                         .fill(bgFill)
                 )
                 .contentShape(Rectangle())
@@ -252,7 +264,7 @@ private struct SidebarTabRow: View {
                 if isHovered || isActive {
                     Button(action: onClose) {
                         Image(systemName: "xmark")
-                            .font(.system(size: 8, weight: .bold))  // 9 → 8
+                            .font(NookType.pip)  // 9 → 8
                             .foregroundStyle(t.iconFgMute)
                             .frame(width: 16, height: 16)
                             .background(Circle().fill(t.hoverBg))
@@ -266,15 +278,15 @@ private struct SidebarTabRow: View {
             .frame(height: 32)                                      // 30 → 32
             .frame(maxWidth: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)  // 7 → 8 (on grid)
+                RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)  // 7 → 8 (on grid)
                     .fill(tabBg)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                             .strokeBorder(isActive ? t.stroke3 : .clear, lineWidth: 0.5)
                     )
                     .overlay(alignment: .top) {
                         if isActive {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                                 .strokeBorder(
                                     LinearGradient(
                                         colors: [t.innerHighlight, .clear],
@@ -310,5 +322,106 @@ private struct SidebarTabRow: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+    }
+}
+
+
+// MARK: - Help Tab Row (sidebar layout)
+
+struct HelpTabRow: View {
+    let isDark: Bool
+    let onClose: () -> Void
+
+    @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "info.circle")
+                .font(NookType.captionEmph)
+                .foregroundStyle(t.fg)
+                .frame(width: 8, height: 8)
+
+            Text("CL Help")
+                .font(NookType.bodyEmph)
+                .foregroundStyle(t.fg)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(NookType.pip)
+                    .foregroundStyle(t.iconFgMute)
+                    .frame(width: 16, height: 16)
+                    .background(Circle().fill(t.hoverBg))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.leading, 8)
+        .padding(.trailing, 4)
+        .frame(height: 32)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                .fill(t.L3)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                        .strokeBorder(t.stroke3, lineWidth: 0.5)
+                )
+                .shadow(color: isDark ? .black.opacity(0.35) : .clear, radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
+    }
+}
+
+// MARK: - Notes Tab Row (sidebar layout)
+
+struct NotesTabRow: View {
+    let isDark: Bool
+    let onClose: () -> Void
+
+    @State private var isHovered = false
+    private var t: NookTheme { NookTheme(isDark: isDark) }
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "note.text")
+                .font(NookType.captionEmph)
+                .foregroundStyle(t.fg)
+                .frame(width: 8, height: 8)
+
+            Text("My Notes")
+                .font(NookType.bodyEmph)
+                .foregroundStyle(t.fg)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onClose) {
+                Image(systemName: "xmark")
+                    .font(NookType.pip)
+                    .foregroundStyle(t.iconFgMute)
+                    .frame(width: 16, height: 16)
+                    .background(Circle().fill(t.hoverBg))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.leading, 8)
+        .padding(.trailing, 4)
+        .frame(height: 32)
+        .frame(maxWidth: .infinity)
+        .background(
+            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                .fill(t.L3)
+                .overlay(
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
+                        .strokeBorder(t.stroke3, lineWidth: 0.5)
+                )
+                .shadow(color: isDark ? .black.opacity(0.35) : .clear, radius: 2, y: 1)
+        )
+        .contentShape(Rectangle())
+        .onHover { isHovered = $0 }
     }
 }

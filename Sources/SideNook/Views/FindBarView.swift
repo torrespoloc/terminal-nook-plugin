@@ -30,8 +30,8 @@ struct FindBarView: View {
             navButtons
             doneButton
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity)
         .background(
             ZStack {
@@ -65,20 +65,20 @@ struct FindBarView: View {
     // MARK: - Search field (rounded, magnifier + chevron, clear button)
 
     private var searchField: some View {
-        HStack(spacing: 6) {
-            HStack(spacing: 2) {
+        HStack(spacing: 8) {
+            HStack(spacing: 4) {
                 Image(systemName: "magnifyingglass")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(NookType.captionStrong)
                     .foregroundStyle(t.iconFgMute)
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .semibold))
+                    .font(NookType.chevronStrong)
                     .foregroundStyle(t.iconFgMute)
             }
             .padding(.leading, 8)
 
             TextField("", text: $state.findQuery, prompt: Text("Search").foregroundStyle(t.fgMute))
                 .textFieldStyle(.plain)
-                .font(.system(size: 12))
+                .font(NookType.labelReg)
                 .foregroundStyle(t.fg)
                 .focused($fieldFocused)
                 .onSubmit { goToNext() }
@@ -95,21 +95,21 @@ struct FindBarView: View {
                     fieldFocused = true
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 12))
+                        .font(NookType.labelReg)
                         .foregroundStyle(t.iconFgMute)
                 }
                 .buttonStyle(.plain)
-                .padding(.trailing, 6)
+                .padding(.trailing, 8)
             }
         }
         .frame(height: 22)
         .background(
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                 .fill(t.L0)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
-                .strokeBorder(fieldFocused ? t.accentReadable.opacity(0.55) : t.stroke3,
+            RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
+                .strokeBorder(fieldFocused ? t.focusBorder : t.stroke3,
                               lineWidth: 0.5)
         )
         .frame(maxWidth: .infinity)
@@ -124,11 +124,11 @@ struct FindBarView: View {
             navButton(icon: "chevron.right", action: goToNext)
         }
         .background(
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                 .fill(t.L0)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 5, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                 .strokeBorder(t.stroke3, lineWidth: 0.5)
         )
     }
@@ -137,7 +137,7 @@ struct FindBarView: View {
         let enabled = matchCount > 0
         return Button(action: action) {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(NookType.microStrong)
                 .foregroundStyle(enabled ? t.iconFg : t.iconFgMute.opacity(0.5))
                 .frame(width: 26, height: 22)
                 .contentShape(Rectangle())
@@ -153,16 +153,16 @@ struct FindBarView: View {
             close()
         } label: {
             Text("Done")
-                .font(.system(size: 12, weight: .medium))
+                .font(NookType.label)
                 .foregroundStyle(t.fg)
                 .padding(.horizontal, 12)
                 .frame(height: 22)
                 .background(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .fill(t.L0)
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 5, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .strokeBorder(t.stroke3, lineWidth: 0.5)
                 )
         }

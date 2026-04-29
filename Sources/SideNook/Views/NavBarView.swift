@@ -13,14 +13,14 @@ struct NavBarView: View {
             secondaryRow
         }
         .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
+            RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                 .fill(t.L2)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                         .strokeBorder(t.stroke2, lineWidth: 0.5)
                 )
                 .overlay(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous)
                         .strokeBorder(
                             LinearGradient(
                                 colors: [t.innerHighlight, .clear],
@@ -43,7 +43,7 @@ struct NavBarView: View {
         HStack(spacing: 0) {
             TrafficLightButtonsView(state: state)
                 .padding(.leading, 8)
-                .padding(.trailing, 6)
+                .padding(.trailing, 8)
 
             verticalDivider
 
@@ -57,16 +57,28 @@ struct NavBarView: View {
                 state.tabLayout = .leftSidebar
             }
             .help("Switch to Sidebar Layout")
-            .padding(.horizontal, 2)
+            .padding(.horizontal, 4)
 
             verticalDivider
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 4) {
+                    if state.notesTabActive {
+                        NotesTabButton(
+                            isDark: state.isDark,
+                            onClose: { state.closeNotesTab() }
+                        )
+                    }
+                    if state.helpTabActive {
+                        HelpTabButton(
+                            isDark: state.isDark,
+                            onClose: { state.closeHelpTab() }
+                        )
+                    }
                     ForEach(state.sessions) { session in
                         TabButtonView(
                             session: session,
-                            isActive: session.id == state.activeSessionID,
+                            isActive: session.id == state.activeSessionID && !state.notesTabActive && !state.helpTabActive,
                             isDark: state.isDark,
                             onSelect: { state.switchToSession(session.id) },
                             onClose: { state.closeSession(session.id) },
@@ -101,36 +113,36 @@ struct NavBarView: View {
                 }
             }
             .help("New Tab")
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 8)
         }
         .frame(height: 40)
     }
 
-    // MARK: - Secondary row (CL Notes, Help · theme, pin, settings)
+    // MARK: - Secondary row (Notes, Help · theme, pin, settings)
 
     private var secondaryRow: some View {
         HStack(spacing: 4) {
             NavTriggerButton(
                 icon: "note.text",
-                label: "CL Notes",
+                label: "Notes",
                 isOn: state.showNotes,
                 isDark: state.isDark,
                 trailing: { AnyView(noteCounter) }
             ) {
-                if state.canTogglePopover() { state.showNotes.toggle() }
+                if state.canTogglePopover("notes") { state.showNotes.toggle() }
             }
             .popover(
                 isPresented: Binding(
                     get: { state.showNotes },
                     set: { newValue in
-                        if !newValue && state.showNotes { state.notePopoverDismissed() }
+                        if !newValue && state.showNotes { state.notePopoverDismissed("notes") }
                         state.showNotes = newValue
                     }
                 ),
                 attachmentAnchor: .point(.bottom),
                 arrowEdge: .top
             ) {
-                CLNotesView(state: state, showsTrigger: false)
+                NotesView(state: state, showsTrigger: false)
             }
 
             NavTriggerButton(
@@ -139,13 +151,13 @@ struct NavBarView: View {
                 isOn: state.showCommandHelp,
                 isDark: state.isDark
             ) {
-                if state.canTogglePopover() { state.showCommandHelp.toggle() }
+                if state.canTogglePopover("help") { state.showCommandHelp.toggle() }
             }
             .popover(
                 isPresented: Binding(
                     get: { state.showCommandHelp },
                     set: { newValue in
-                        if !newValue && state.showCommandHelp { state.notePopoverDismissed() }
+                        if !newValue && state.showCommandHelp { state.notePopoverDismissed("help") }
                         state.showCommandHelp = newValue
                     }
                 ),
@@ -186,14 +198,14 @@ struct NavBarView: View {
                 fgActive: t.fg,
                 isDark: state.isDark
             ) {
-                if state.canTogglePopover() { state.showSettings.toggle() }
+                if state.canTogglePopover("settings") { state.showSettings.toggle() }
             }
             .help("Settings")
             .popover(
                 isPresented: Binding(
                     get: { state.showSettings },
                     set: { newValue in
-                        if !newValue && state.showSettings { state.notePopoverDismissed() }
+                        if !newValue && state.showSettings { state.notePopoverDismissed("settings") }
                         state.showSettings = newValue
                     }
                 ),
@@ -203,24 +215,24 @@ struct NavBarView: View {
                 SettingsPopoverView(state: state)
             }
         }
-        .padding(.horizontal, 6)
+        .padding(.horizontal, 8)
         .frame(height: 32)
     }
 
     private var noteCounter: some View {
-        let count = state.clNotes.isEmpty ? 0 : state.clNotes.components(separatedBy: "\n").count
+        let count = state.Notes.isEmpty ? 0 : state.Notes.components(separatedBy: "\n").count
         let atCap = count >= NookState.maxNoteLines
         return Text("\(count)/\(NookState.maxNoteLines)")
-            .font(.system(size: 10, design: .monospaced))
+            .font(NookType.microMono)
             .foregroundStyle(atCap ? t.dotAttn : t.fgMute)
     }
 
     // MARK: - Components
 
     private var dragGrip: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {
             ForEach(0..<3, id: \.self) { _ in
-                HStack(spacing: 3) {
+                HStack(spacing: 4) {
                     Circle().fill(t.fgMute).frame(width: 3, height: 3)
                     Circle().fill(t.fgMute).frame(width: 3, height: 3)
                 }
@@ -258,20 +270,20 @@ struct NavTriggerButton: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(NookType.label)
                     .foregroundStyle(t.fgMid)
 
                 Text(label)
-                    .font(.system(size: 12, weight: .medium))
+                    .font(NookType.label)
                     .foregroundStyle(t.fgMid)
                     .fixedSize(horizontal: true, vertical: false)
 
                 if let trailing { trailing() }
 
                 Image(systemName: "chevron.down")
-                    .font(.system(size: 8, weight: .medium))
+                    .font(NookType.chevron)
                     .foregroundStyle(t.fgMute)
                     .rotationEffect(.degrees(isOn ? 180 : 0))
                     .animation(.easeOut(duration: 0.15), value: isOn)
@@ -279,10 +291,10 @@ struct NavTriggerButton: View {
             .padding(.horizontal, 8)
             .frame(height: 24)
             .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                     .fill(bgFill)
                     .overlay(
-                        RoundedRectangle(cornerRadius: 7, style: .continuous)
+                        RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                             .strokeBorder(isOn ? t.stroke3 : .clear, lineWidth: 0.5)
                     )
             )
@@ -335,15 +347,15 @@ struct NavIconButton: View {
                 .foregroundStyle(fgColor)
                 .frame(width: 28, height: 28)
                 .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                         .fill(bgFill)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                                 .strokeBorder(isOn && tone == .normal ? activeBorder : .clear, lineWidth: 0.5)
                         )
                         .overlay(alignment: .top) {
                             if isOn && tone == .normal {
-                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                                     .strokeBorder(
                                         LinearGradient(
                                             colors: [activeHighlight, .clear],

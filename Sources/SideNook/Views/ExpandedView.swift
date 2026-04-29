@@ -22,14 +22,14 @@ struct ExpandedView: View {
     // MARK: - Background
 
     private var background: some View {
-        RoundedRectangle(cornerRadius: 14, style: .continuous)
+        RoundedRectangle(cornerRadius: NookRadius.xl, style: .continuous)
             .fill(t.L0)
             .overlay {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.xl, style: .continuous)
                     .strokeBorder(t.stroke0, lineWidth: 0.5)
             }
             .overlay(alignment: .top) {
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                RoundedRectangle(cornerRadius: NookRadius.xl, style: .continuous)
                     .strokeBorder(
                         LinearGradient(
                             colors: [t.innerHighlight, .clear],
@@ -57,11 +57,11 @@ struct ExpandedView: View {
     private func panelContent(session: TerminalSession) -> some View {
         Group {
             if state.tabLayout == .leftSidebar {
-                HStack(spacing: 6) {
+                HStack(spacing: 8) {
                     SidebarNavView(state: state)
                         .padding(.leading, 8)
                         .padding(.vertical, 8)
-                    TerminalContainerView(session: session, isDark: state.isDark, state: state)
+                    contentArea(session: session)
                         .padding(.trailing, 8)
                         .padding(.top, 16)
                         .padding(.bottom, 8)
@@ -69,14 +69,25 @@ struct ExpandedView: View {
             } else {
                 VStack(spacing: 0) {
                     NavBarView(state: state)
-                    TerminalContainerView(session: session, isDark: state.isDark, state: state)
+                    contentArea(session: session)
                         .padding(.horizontal, 8)
                         .padding(.top, 16)
                         .padding(.bottom, 8)
                 }
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: NookRadius.xl, style: .continuous))
+    }
+
+    @ViewBuilder
+    private func contentArea(session: TerminalSession) -> some View {
+        if state.notesTabActive {
+            NotesTabFullView(state: state)
+        } else if state.helpTabActive {
+            HelpTabFullView(state: state)
+        } else {
+            TerminalContainerView(session: session, isDark: state.isDark, state: state)
+        }
     }
 
     // MARK: - Resize Handles

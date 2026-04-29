@@ -32,7 +32,7 @@ struct TerminalContainerView: View {
                     .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: NookRadius.lg, style: .continuous))
         .animation(.easeOut(duration: 0.16), value: state?.findVisible ?? false)
     }
 }
@@ -54,7 +54,7 @@ private struct ScrollButtons: View {
     private let pulse = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 8) {
             arrowButton(.up,   icon: "chevron.up")
             arrowButton(.down, icon: "chevron.down")
         }
@@ -81,13 +81,13 @@ private struct ScrollButtons: View {
             smoothScroll(direction: arrow)
         } label: {
             Image(systemName: icon)
-                .font(.system(size: 10, weight: .semibold))
+                .font(NookType.microStrong)
                 .foregroundStyle(fg)
                 .frame(width: 24, height: 24)
                 .background(Capsule(style: .continuous).fill(bg))
                 .overlay(
                     Capsule(style: .continuous)
-                        .strokeBorder(isCTA ? t.ctaFg.opacity(0.20) : Color.clear, lineWidth: 0.5)
+                        .strokeBorder(isCTA ? t.ctaBorder : Color.clear, lineWidth: 0.5)
                 )
                 .shadow(color: .black.opacity(isCTA ? 0.20 : 0.14), radius: 3, y: 1)
         }
@@ -134,21 +134,21 @@ private struct DeadSessionOverlay: View {
 
             VStack(spacing: 16) {
                 Image(systemName: "terminal")
-                    .font(.system(size: 24, weight: .light))
+                    .font(NookType.heroL)
                     .foregroundStyle(t.iconFgMute)
 
                 Text("Session ended")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(NookType.formValueEmph)
                     .foregroundStyle(t.fg)
 
                 Button(action: onRestart) {
                     Text("Restart")
-                        .font(.system(size: 13, weight: .medium))
+                        .font(NookType.body)
                         .foregroundStyle(t.fg)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
                         .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            RoundedRectangle(cornerRadius: NookRadius.md, style: .continuous)
                                 .fill(isHovered ? t.pressedBg : t.hoverBg)
                         )
                 }

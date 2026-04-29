@@ -107,20 +107,11 @@ final class TerminalSession: Identifiable {
 
     func applyAppearance(_ appearance: NookState.Appearance) {
         currentAppearance = appearance
-        switch appearance {
-        case .dark:
-            terminalView.nativeBackgroundColor = NSColor(red: 0.114, green: 0.118, blue: 0.141, alpha: 1)
-            terminalView.nativeForegroundColor = NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1)
-            // Dark mode: light sky-blue selection — pale enough to read on a dark background.
-            terminalView.selectedTextBackgroundColor = NSColor(red: 0.55, green: 0.80, blue: 1.0, alpha: 0.38)
-            terminalView.installColors(Self.darkPalette)
-        case .light:
-            terminalView.nativeBackgroundColor = NSColor(red: 0.961, green: 0.961, blue: 0.957, alpha: 1)
-            terminalView.nativeForegroundColor = NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1)
-            // Light mode: pale sky-blue selection — high brightness so it reads as light blue at any alpha.
-            terminalView.selectedTextBackgroundColor = NSColor(red: 0.60, green: 0.84, blue: 1.0, alpha: 0.55)
-            terminalView.installColors(Self.lightPalette)
-        }
+        let theme = NookTheme(isDark: appearance == .dark)
+        terminalView.nativeBackgroundColor = theme.nsTermBg
+        terminalView.nativeForegroundColor = theme.nsTermFg
+        terminalView.selectedTextBackgroundColor = theme.nsTermSelectionBg
+        terminalView.installColors(appearance == .dark ? Self.darkPalette : Self.lightPalette)
         // Signal running CLIs (Claude Code, bat, etc.) to re-query terminal background
         // and redraw with the new colour scheme.
         if processStarted {

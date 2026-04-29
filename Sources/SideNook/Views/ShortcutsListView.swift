@@ -34,25 +34,25 @@ struct ShortcutsListView: View {
     ]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 8) {
             ForEach(shortcuts, id: \.key) { shortcut in
                 shortcutRow(shortcut)
             }
 
-            Divider().padding(.vertical, 2)
+            Divider().padding(.vertical, 4)
 
-            Text("CL Notes")
-                .font(.system(size: 11, weight: .semibold))
+            Text("Notes")
+                .font(NookType.captionStrong)
                 .foregroundStyle(fgMuted)
 
             ForEach(notesShortcuts, id: \.key) { shortcut in
                 shortcutRow(shortcut)
             }
 
-            Divider().padding(.vertical, 2)
+            Divider().padding(.vertical, 4)
 
             Text("System text shortcuts also apply — three-finger drag, double-tap select, and any custom Accessibility Pointer shortcuts you've configured in System Settings.")
-                .font(.system(size: 11))
+                .font(NookType.caption)
                 .foregroundStyle(fgMuted.opacity(0.4))
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -63,18 +63,18 @@ struct ShortcutsListView: View {
     private func shortcutRow(_ shortcut: (key: String, action: String)) -> some View {
         HStack {
             Text(shortcut.key)
-                .font(.system(size: 12, weight: .medium, design: .monospaced))
+                .font(NookType.labelMono)
                 .foregroundStyle(fg)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 3)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
                 .background(
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                    RoundedRectangle(cornerRadius: NookRadius.xs, style: .continuous)
                         .fill(badgeBg)
                 )
                 .frame(width: 64, alignment: .center)
 
             Text(shortcut.action)
-                .font(.system(size: 13))
+                .font(NookType.bodyReg)
                 .foregroundStyle(fgMuted)
 
             Spacer()

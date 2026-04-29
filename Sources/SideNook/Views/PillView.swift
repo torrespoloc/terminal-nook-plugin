@@ -37,13 +37,14 @@ struct PillView: View {
             : CGSize(width: AppDelegate.Constants.pillHeight, height: AppDelegate.Constants.pillWidth)
     }
 
-    /// Anchor the pill against its docked screen edge inside the parent frame.
+    /// Anchor the pill in the quadrant-derived corner of the parent frame so it
+    /// stays pinned across the expand transition (no recentering flicker).
     private var edgeAlignment: Alignment {
-        switch state.dockedEdge {
-        case .left:   return .leading
-        case .right:  return .trailing
-        case .top:    return .top
-        case .bottom: return .bottom
+        switch state.pillCorner {
+        case .topLeading:     return .topLeading
+        case .topTrailing:    return .topTrailing
+        case .bottomLeading:  return .bottomLeading
+        case .bottomTrailing: return .bottomTrailing
         }
     }
 

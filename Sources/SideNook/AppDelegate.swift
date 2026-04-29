@@ -109,7 +109,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
             // If a text editor (notes, find bar, popover field) is focused,
             // let standard editing shortcuts pass through to it.
-            if isEditingText() {
+            // Popovers host in their own NSWindow, so any event NOT targeting
+            // the main panel is presumed to be a text-editing context.
+            if event.window !== self.panel || isEditingText() {
                 switch chars {
                 case "a", "c", "v", "x", "z", "Z":
                     return event
@@ -128,7 +130,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self.state.applyFontToAllSessions()
                 return nil
             case "t" where !shift:
-                if self.state.sessions.count < NookState.maxTabs {
+                if !isEditingText(), self.state.sessions.count < NookState.maxTabs {
                     self.state.createSession()
                 }
                 return nil
@@ -154,14 +156,26 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             case "v":
                 if let session = self.state.activeSession {
                     session.terminalView.paste(session.terminalView)
+                } else {
+                    NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
                 }
                 return nil
             case "c":
                 if let session = self.state.activeSession {
                     session.terminalView.copy(session.terminalView)
+                } else {
+                    NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
                 }
                 return nil
             case "x":
+                if self.state.activeSession == nil {
+                    NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                }
+                return nil
+            case "a" where !shift:
+                if self.state.activeSession == nil {
+                    NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+                }
                 return nil
             case "z":
                 if let session = self.state.activeSession {

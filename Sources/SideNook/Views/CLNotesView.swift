@@ -157,6 +157,7 @@ struct NotesEditorView: NSViewRepresentable {
     let separatorColor: NSColor
     let lineLimit: Int
     let isDark: Bool
+    let isActive: Bool
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }
 
@@ -241,6 +242,11 @@ struct NotesEditorView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
+        if isActive, textView.window?.firstResponder !== textView {
+            DispatchQueue.main.async { [weak textView] in
+                textView?.window?.makeFirstResponder(textView)
+            }
+        }
         if textView.string != text {
             let ranges = textView.selectedRanges
             textView.string = text
@@ -398,7 +404,8 @@ struct NotesView: View {
                 gutterFg: t.nsNoteGutterFg,
                 separatorColor: t.nsNoteGutterSeparator,
                 lineLimit: NookState.maxNoteLines,
-                isDark: state.isDark
+                isDark: state.isDark,
+                isActive: state.showNotes
             )
             .frame(height: 180)
             .clipped()
@@ -463,7 +470,8 @@ struct NotesTabFullView: View {
                 gutterFg: t.nsNoteGutterFg,
                 separatorColor: t.nsNoteGutterSeparator,
                 lineLimit: NookState.maxNoteLines,
-                isDark: state.isDark
+                isDark: state.isDark,
+                isActive: state.notesTabActive
             )
         }
         .background(Color(t.nsNoteBg))

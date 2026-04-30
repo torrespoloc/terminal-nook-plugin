@@ -45,6 +45,8 @@ private struct ScrollButtons: View {
 
     @State private var hoveredArrow: Arrow? = nil
     @State private var isScrolledUp: Bool = false
+    @State private var hasUnreadContent: Bool = false
+    @State private var scrolledUpOutputBaseline: Int = 0
     private var t: NookTheme { NookTheme(isDark: isDark) }
 
     private enum Arrow: Equatable { case up, down }
@@ -61,18 +63,30 @@ private struct ScrollButtons: View {
         .padding(8)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
         .onReceive(pulse) { _ in
-            let next = session.terminalView.scrollPosition < 1.0
+            let next = session.terminalView.canScroll && session.terminalView.scrollPosition < 1.0
             if next != isScrolledUp {
                 withAnimation(.easeOut(duration: 0.18)) { isScrolledUp = next }
+                if next {
+                    scrolledUpOutputBaseline = session.terminalView.outputCount
+                    hasUnreadContent = false
+                } else {
+                    hasUnreadContent = false
+                }
+            } else if isScrolledUp && !hasUnreadContent {
+                if session.terminalView.outputCount > scrolledUpOutputBaseline {
+                    withAnimation(.easeOut(duration: 0.18)) { hasUnreadContent = true }
+                }
             }
         }
     }
 
     private func arrowButton(_ arrow: Arrow, icon: String) -> some View {
         let isCTA = (arrow == .down) && isScrolledUp
+        let isUrgent = isCTA && hasUnreadContent
         let isHover = (hoveredArrow == arrow)
         let bg: Color = {
-            if isCTA { return isHover ? t.ctaBgHover : t.ctaBg }
+            if isUrgent { return isHover ? t.scrollCTABgUrgentHover : t.scrollCTABgUrgent }
+            if isCTA    { return isHover ? t.scrollCTABgHover        : t.scrollCTABg }
             return isHover ? t.arrowBgHover : t.arrowBg
         }()
         let fg: Color = isCTA ? t.ctaFg : t.iconFg
@@ -97,6 +111,7 @@ private struct ScrollButtons: View {
         }
         .animation(.easeOut(duration: 0.12), value: isHover)
         .animation(.easeOut(duration: 0.18), value: isCTA)
+        .animation(.easeOut(duration: 0.18), value: isUrgent)
     }
 
     /// Animates SwiftTerm scroll over ~240ms in 12 small chunks for a smooth feel.

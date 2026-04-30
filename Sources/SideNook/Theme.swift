@@ -107,6 +107,20 @@ struct NookTheme {
         isDark ? Color(red: 0.674, green: 0.859, blue: 0.914).opacity(0.32)
                : Color(red: 0.612, green: 0.820, blue: 0.886)
     }
+
+    // ── Scroll-arrow CTA (fully opaque — separate from ctaBg which is semi-transparent) ──
+    var scrollCTABg: Color {
+        isDark ? Color(red: 0.28, green: 0.55, blue: 0.68) : Color(red: 0.674, green: 0.859, blue: 0.914)
+    }
+    var scrollCTABgHover: Color {
+        isDark ? Color(red: 0.25, green: 0.62, blue: 0.76) : Color(red: 0.612, green: 0.820, blue: 0.886)
+    }
+    var scrollCTABgUrgent: Color {
+        isDark ? Color(red: 0.18, green: 0.65, blue: 0.84) : Color(red: 0.52, green: 0.79, blue: 0.91)
+    }
+    var scrollCTABgUrgentHover: Color {
+        isDark ? Color(red: 0.16, green: 0.72, blue: 0.92) : Color(red: 0.48, green: 0.76, blue: 0.88)
+    }
     var ctaFg: Color {
         isDark ? Color(red: 0.674, green: 0.859, blue: 0.914)
                : Color(red: 0.10, green: 0.30, blue: 0.40)

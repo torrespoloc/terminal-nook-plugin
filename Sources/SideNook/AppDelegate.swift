@@ -603,18 +603,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let panelFrame = panel.frame
         let center = CGPoint(x: panelFrame.midX, y: panelFrame.midY)
         let edge = nearestScreenEdge(panelCenter: center, screenFrame: screenFrame)
+        // Preserve the dragged y/x exactly: pick offset so expandedOrigin returns
+        // panelFrame.minY/minX in the matching quadrant.
         let nextOffset: CGFloat = {
             switch edge {
-            case .left, .right: return panelFrame.midY - Constants.pillHeight / 2
-            case .top, .bottom: return panelFrame.midX - Constants.pillHeight / 2
+            case .left, .right:
+                let topQuadrant = panelFrame.midY >= screenFrame.midY
+                return topQuadrant
+                    ? panelFrame.maxY - Constants.pillHeight
+                    : panelFrame.minY
+            case .top, .bottom:
+                let rightQuadrant = panelFrame.midX >= screenFrame.midX
+                return rightQuadrant
+                    ? panelFrame.maxX - Constants.pillHeight
+                    : panelFrame.minX
             }
         }()
-        // Animate the edge / offset transition so layout flips (e.g. sidebar moving left↔right) glide smoothly.
         withAnimation(.spring(response: 0.32, dampingFraction: 0.82)) {
             state.dockedEdge = edge
             state.pillEdgeOffset = nextOffset
             state.updatePillCorner(in: screenFrame)
         }
+        // Re-anchor the expanded panel to the chosen edge so it can't float free.
+        // y/x is preserved by the offset above; only the docked dimension changes.
+        let size = NSSize(width: state.expandedSize.width, height: state.expandedSize.height)
+        let pos = clampToScreen(
+            origin: expandedOrigin(screenFrame: screenFrame),
+            size: size,
+            screenFrame: screenFrame
+        )
+        isUpdatingFrame = true
+        state.panelPosition = pos
+        panel.setFrame(NSRect(origin: pos, size: size), display: true, animate: false)
+        isUpdatingFrame = false
     }
 
     // MARK: - Tab Navigation

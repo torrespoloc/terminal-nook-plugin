@@ -6,6 +6,8 @@ final class SideNookPanel: NSPanel {
 
     var onDragEnd: (() -> Void)?
 
+    private var didDrag = false
+
     override var canBecomeKey: Bool { true }
 
     override init(
@@ -25,6 +27,7 @@ final class SideNookPanel: NSPanel {
     }
 
     override func mouseDown(with event: NSEvent) {
+        didDrag = false
         if !isKeyWindow {
             NSApp.activate(ignoringOtherApps: true)
             makeKey()
@@ -39,8 +42,14 @@ final class SideNookPanel: NSPanel {
         super.mouseDown(with: event)
     }
 
+    override func mouseDragged(with event: NSEvent) {
+        didDrag = true
+        super.mouseDragged(with: event)
+    }
+
     override func mouseUp(with event: NSEvent) {
         super.mouseUp(with: event)
-        onDragEnd?()
+        if didDrag { onDragEnd?() }
+        didDrag = false
     }
 }

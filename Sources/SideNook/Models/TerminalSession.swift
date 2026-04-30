@@ -174,11 +174,13 @@ final class TerminalSession: Identifiable {
     ]
 
     /// Substrings that definitively indicate the session is NOT blocked on
-    /// input. Any match here wins over attnPatterns and returns false.
-    /// "esc to interrupt" appears in Claude Code's status footer while it is
-    /// actively running — never during an approval prompt.
+    /// input. A match anywhere in the scanned rows wins over attnPatterns.
+    /// "esc to interrupt" — Claude Code actively running footer.
+    /// "recap:" / "cooked for" — Claude Code completion summary lines.
     private static let runningIndicators: [String] = [
         "esc to interrupt",
+        "recap:",
+        "cooked for",
     ]
 
     /// Rows from the bottom of the visible buffer to scan. Keeping this small
@@ -215,15 +217,18 @@ final class TerminalSession: Identifiable {
         guard total > 0 else { return false }
         let scan = min(total, Self.attnScanRows)
         let start = total - scan
-        // Scan bottom-up: TUIs like Claude Code redraw their footer in place,
-        // so an older "esc to interrupt" line can linger above the current
-        // "esc to cancel" prompt. The state closest to the cursor wins.
-        for r in (start..<total).reversed() {
+        var lines: [String] = []
+        for r in start..<total {
             guard let line = term.getLine(row: r) else { continue }
-            let lower = line.translateToString(trimRight: true).lowercased()
-            if Self.runningIndicators.contains(where: { lower.contains($0) }) {
-                return false
-            }
+            lines.append(line.translateToString(trimRight: true).lowercased())
+        }
+        // Pass 1: running indicators win globally — a completion marker anywhere
+        // in the scanned rows overrides any attn pattern (even one closer to cursor).
+        if lines.contains(where: { lower in Self.runningIndicators.contains(where: { lower.contains($0) }) }) {
+            return false
+        }
+        // Pass 2: scan bottom-up so the prompt closest to the cursor wins.
+        for lower in lines.reversed() {
             if Self.attnPatterns.contains(where: { lower.contains($0.lowercased()) }) {
                 return true
             }

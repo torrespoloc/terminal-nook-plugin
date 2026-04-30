@@ -91,10 +91,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // windows for any NSText (covers NSTextView and field editors).
             func isEditingText() -> Bool {
                 if let r = event.window?.firstResponder, r is NSText { return true }
-                if let r = NSApp.keyWindow?.firstResponder, r is NSText { return true }
-                for w in NSApp.windows where w.isVisible {
-                    if let r = w.firstResponder, r is NSText { return true }
-                }
                 return false
             }
 
@@ -135,7 +131,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
                 return nil
             case "w" where !shift:
-                if let id = self.state.activeSessionID {
+                if !isEditingText(), let id = self.state.activeSessionID {
                     self.state.closeSession(id)
                 }
                 return nil
@@ -380,6 +376,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             MainActor.assumeIsolated {
                 guard let self, let session = self.state.activeSession else { return }
                 self.state.isWindowActive = true
+                guard !self.state.notesTabActive && !self.state.showNotes else { return }
                 self.panel.makeFirstResponder(session.terminalView)
             }
         }

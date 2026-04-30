@@ -230,7 +230,15 @@ struct NotesEditorView: NSViewRepresentable {
             object: scrollView.contentView
         )
         context.coordinator.rulerView = ruler
+        context.coordinator.textView = textView
         context.coordinator.padDocumentToMinLines(textView: textView)
+
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.windowBecameKey(_:)),
+            name: NSWindow.didBecomeKeyNotification,
+            object: nil
+        )
 
         // Auto-focus on first appearance so the user can type immediately.
         DispatchQueue.main.async { [weak textView] in
@@ -242,11 +250,13 @@ struct NotesEditorView: NSViewRepresentable {
 
     func updateNSView(_ scrollView: NSScrollView, context: Context) {
         guard let textView = scrollView.documentView as? NSTextView else { return }
-        if isActive, textView.window?.firstResponder !== textView {
+        context.coordinator.isActive = isActive
+        if isActive, !context.coordinator.wasActive {
             DispatchQueue.main.async { [weak textView] in
                 textView?.window?.makeFirstResponder(textView)
             }
         }
+        context.coordinator.wasActive = isActive
         if textView.string != text {
             let ranges = textView.selectedRanges
             textView.string = text
@@ -273,8 +283,23 @@ struct NotesEditorView: NSViewRepresentable {
     final class Coordinator: NSObject, NSTextViewDelegate {
         var parent: NotesEditorView
         weak var rulerView: LineNumberRulerView?
+        weak var textView: NSTextView?
+        var wasActive: Bool = false
+        var isActive: Bool = false
 
         init(_ parent: NotesEditorView) { self.parent = parent }
+
+        deinit { NotificationCenter.default.removeObserver(self) }
+
+        @objc func windowBecameKey(_ notification: Notification) {
+            guard isActive,
+                  let tv = textView,
+                  let win = tv.window,
+                  (notification.object as? NSWindow) === win else { return }
+            DispatchQueue.main.async {
+                win.makeFirstResponder(tv)
+            }
+        }
 
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }

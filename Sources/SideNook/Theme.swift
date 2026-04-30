@@ -176,7 +176,7 @@ extension NookTheme {
     /// Default terminal foreground colour.
     var nsTermFg: NSColor {
         isDark ? NSColor(red: 0.910, green: 0.910, blue: 0.918, alpha: 1.0)
-               : NSColor(red: 0.110, green: 0.110, blue: 0.118, alpha: 1.0)
+               : NSColor(red: 0.282, green: 0.282, blue: 0.298, alpha: 1.0)
     }
     /// Selection highlight in the terminal (sky-blue tint, not the global accent).
     var nsTermSelectionBg: NSColor {

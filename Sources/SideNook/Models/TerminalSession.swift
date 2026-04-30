@@ -181,6 +181,7 @@ final class TerminalSession: Identifiable {
         "esc to interrupt",
         "recap:",
         "cooked for",
+        "churned for",
     ]
 
     /// Rows from the bottom of the visible buffer to scan. Keeping this small

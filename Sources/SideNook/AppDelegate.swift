@@ -89,7 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Popovers (Notes, CL Help) host in their own window, so
             // NSApp.keyWindow may not match. Check event window + all visible
             // windows for any NSText (covers NSTextView and field editors).
-            func isEditingText() -> Bool {
+            @MainActor func isEditingText() -> Bool {
                 if let r = event.window?.firstResponder, r is NSText { return true }
                 return false
             }
@@ -104,15 +104,38 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             guard cmd else { return event }
 
             // If a text editor (notes, find bar, popover field) is focused,
-            // let standard editing shortcuts pass through to it.
+            // forward standard editing shortcuts to the responder chain and
+            // swallow every other Cmd shortcut so terminal-only shortcuts
+            // (⌘T, ⌘W, ⌘K, ⌘↑/↓, ⌘1–9, etc.) don't leak in while editing.
+            // The app has no main-menu Edit submenu, so Cmd+C/V/X/A/Z would
+            // otherwise drop on the floor — explicitly send the action.
             // Popovers host in their own NSWindow, so any event NOT targeting
             // the main panel is presumed to be a text-editing context.
             if event.window !== self.panel || isEditingText() {
                 switch chars {
-                case "a", "c", "v", "x", "z", "Z":
-                    return event
-                default:
+                case "c":
+                    NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+                    return nil
+                case "v":
+                    NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+                    return nil
+                case "x":
+                    NSApp.sendAction(#selector(NSText.cut(_:)), to: nil, from: nil)
+                    return nil
+                case "a":
+                    NSApp.sendAction(#selector(NSText.selectAll(_:)), to: nil, from: nil)
+                    return nil
+                case "z":
+                    NSApp.sendAction(Selector(("undo:")), to: nil, from: nil)
+                    return nil
+                case "Z":
+                    NSApp.sendAction(Selector(("redo:")), to: nil, from: nil)
+                    return nil
+                case ",", "q":
+                    // Let app-level shortcuts (settings, quit) still work.
                     break
+                default:
+                    return event
                 }
             }
 

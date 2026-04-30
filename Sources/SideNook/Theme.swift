@@ -134,6 +134,8 @@ struct NookTheme {
     var focusBorder: Color { accentReadable.opacity(0.55) }
     /// Settings/About card background — slightly lighter than panel L1 in light mode.
     var aboutBg:     Color { isDark ? Self.darkL3 : Color(white: 0.96) }
+    /// Fully opaque header background for the Notes tab — matches nsNoteBg so scrolling content can't bleed through.
+    var noteHeaderBg: Color { isDark ? Color(red: 0.082, green: 0.090, blue: 0.125) : Color(white: 0.941) }
 }
 
 // MARK: - AppKit tokens (for NSViewRepresentable — must be concrete opaque NSColors)

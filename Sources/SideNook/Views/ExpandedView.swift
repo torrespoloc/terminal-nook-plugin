@@ -39,16 +39,6 @@ struct ExpandedView: View {
                     )
                     .allowsHitTesting(false)
             }
-            .shadow(
-                color: .black.opacity(t.isDark ? 0.55 : 0.18),
-                radius: t.isDark ? 25 : 20,
-                y: t.isDark ? 18 : 14
-            )
-            .shadow(
-                color: .black.opacity(t.isDark ? 0.35 : 0.10),
-                radius: t.isDark ? 6 : 5,
-                y: t.isDark ? 4 : 3
-            )
     }
 
     // MARK: - Content

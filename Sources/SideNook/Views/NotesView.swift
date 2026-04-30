@@ -481,8 +481,8 @@ struct NotesTabFullView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            Rectangle().fill(t.stroke1).frame(height: 0.5)
+            header.zIndex(1)
+            Rectangle().fill(t.stroke1).frame(height: 0.5).zIndex(1)
             NotesEditorView(
                 text: Binding(
                     get: { state.Notes },
@@ -520,6 +520,6 @@ struct NotesTabFullView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
-        .background(t.L1)
+        .background(t.noteHeaderBg)
     }
 }

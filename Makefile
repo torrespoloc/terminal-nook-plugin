@@ -13,6 +13,7 @@ build:
 	cp Resources/AppIcon.icns $(APP)/Contents/Resources/AppIcon.icns
 	cp Resources/MenuBarIcon.png $(APP)/Contents/Resources/MenuBarIcon.png
 	cp Resources/MenuBarIcon@2x.png $(APP)/Contents/Resources/MenuBarIcon@2x.png
+	cp Resources/Logos/app_icon.png $(APP)/Contents/Resources/LaunchLogo.png
 	mkdir -p $(APP)/Contents/Resources/Metadata
 	cp Resources/Metadata/command-lines.md $(APP)/Contents/Resources/Metadata/command-lines.md
 

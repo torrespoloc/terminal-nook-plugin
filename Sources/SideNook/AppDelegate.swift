@@ -14,6 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let state = NookState()
     private var panel: SideNookPanel!
+    private var splash: LaunchSplashController?
     private var monitor: Any?
     private var moveObserver: NSObjectProtocol?
     private var keyMonitor: Any?
@@ -25,8 +26,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var isUpdatingFrame = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        guard NSScreen.main != nil else { return }
+        guard let mainScreen = NSScreen.main else { return }
         setupStatusItem()
+
+        let splash = LaunchSplashController()
+        self.splash = splash
+        splash.present(on: mainScreen) { [weak self] in
+            self?.panel?.orderFrontRegardless()
+            self?.splash = nil
+        }
 
         let pillSize = pillDimensions(for: state.dockedEdge)
         panel = SideNookPanel(
@@ -55,7 +63,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         panel.contentView = hostingView
         panel.ignoresMouseEvents = true
-        panel.orderFrontRegardless()
+        // orderFrontRegardless is deferred — fires from the launch splash completion
+        // so the pill doesn't peek at the edge while the centered logo is on screen.
 
         // Global mouse-move monitor for edge hit-test
         monitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in

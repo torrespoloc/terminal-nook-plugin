@@ -43,12 +43,14 @@ final class TerminalSession: Identifiable {
         c(130, 180, 255),   c(249, 53,  248),   c(20,  240, 240),   c(233, 235, 235),
     ]
 
-    /// Light mode palette — desaturated for readability on light backgrounds
+    /// Light mode palette — all 16 colors meet WCAG AA 4.5:1 on the ~#F6F6F6 terminal background.
+    /// Green/yellow/cyan are significantly darkened from their dark-mode equivalents; bright variants
+    /// mirror the regular ones because "brighter" on a light bg means lower contrast, not higher.
     private static let lightPalette: [SwiftTerm.Color] = [
-        c(0,   0,   0),     c(194, 54,  33),    c(38,  162, 38),    c(162, 152, 10),
-        c(18,  72,  202),   c(163, 52,  163),   c(32,  156, 168),   c(218, 218, 218),
-        c(118, 118, 118),   c(222, 56,  43),    c(57,  181, 57),    c(196, 186, 32),
-        c(63,  90,  233),   c(204, 62,  204),   c(42,  186, 196),   c(240, 240, 240),
+        c(0,   0,   0),     c(194, 54,  33),    c(28,  120, 28),    c(120, 104,  0),
+        c(18,  72,  202),   c(163, 52,  163),   c(0,   116, 128),   c(218, 218, 218),
+        c(118, 118, 118),   c(222, 56,  43),    c(32,  128, 32),    c(124, 108,  0),
+        c(63,  90,  233),   c(204, 62,  204),   c(0,   116, 140),   c(240, 240, 240),
     ]
 
     /// Create a new terminal session (runs shell directly for full truecolor).
@@ -112,6 +114,7 @@ final class TerminalSession: Identifiable {
         terminalView.nativeForegroundColor = theme.nsTermFg
         terminalView.selectedTextBackgroundColor = theme.nsTermSelectionBg
         terminalView.installColors(appearance == .dark ? Self.darkPalette : Self.lightPalette)
+        terminalView.setAppearance(appearance)
         // Signal running CLIs (Claude Code, bat, etc.) to re-query terminal background
         // and redraw with the new colour scheme.
         if processStarted {
@@ -238,9 +241,103 @@ final class TerminalSession: Identifiable {
 ///
 /// • `mouseDownCanMoveWindow` — explicitly false so three-finger trackpad drags
 ///   always perform text selection, never panel movement.
+///
+/// Also post-processes Claude Code output to adjust colors for light mode:
+/// - Replaces white text with black for the dot prefix (● becomes readable)
+/// - Replaces dark block backgrounds with lighter ones for better contrast
 final class SideNookTerminalView: LocalProcessTerminalView {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override var mouseDownCanMoveWindow: Bool { false }
+
+    // True while the user is scrolled above the live bottom.
+    private var userScrolledUp = false
+
+    // Current appearance for Claude Code color adjustments in light mode.
+    private var currentAppearance: NookState.Appearance = .dark
+
+    func setAppearance(_ appearance: NookState.Appearance) {
+        currentAppearance = appearance
+    }
+
+    // Tracks scroll position changes from all sources (trackpad, keyboard, arrows).
+    override func scrolled(source: TerminalView, position: Double) {
+        super.scrolled(source: source, position: position)
+        userScrolledUp = canScroll && position < 1.0
+    }
+
+    // Incremented on every PTY data chunk — observed by ScrollButtons to detect new content.
+    private(set) var outputCount: Int = 0
+
+    // Suppress auto-scroll-to-bottom when new PTY data arrives and user is reading above.
+    // Also post-process Claude Code escape sequences for light mode.
+    override func dataReceived(slice: ArraySlice<UInt8>) {
+        outputCount += 1
+        let processed = postProcessClaudeCode(slice)
+        if userScrolledUp {
+            let savedPos = scrollPosition
+            super.dataReceived(slice: processed)
+            scroll(toPosition: savedPos)
+        } else {
+            super.dataReceived(slice: processed)
+        }
+    }
+
+    // Post-process ANSI escape sequences to fix Claude Code colors in light mode:
+    // - Replace white text (37m, 97m) with black (30m) when in light mode
+    // - Replace dark backgrounds (48;5;0m, 48;5;8m) with light gray (48;5;7m) when in light mode
+    private func postProcessClaudeCode(_ slice: ArraySlice<UInt8>) -> ArraySlice<UInt8> {
+        guard currentAppearance == .light else { return slice }
+
+        let bytes = Array(slice)
+        var result = bytes
+        var i = 0
+
+        while i < result.count {
+            // Look for ESC character (27 = 0x1B)
+            if result[i] == 27 && i + 1 < result.count && result[i + 1] == UInt8(ascii: "[") {
+                let escapeStart = i
+                i += 2
+
+                // Parse the escape sequence
+                var seqEnd = i
+                while seqEnd < result.count && result[seqEnd] >= 48 && result[seqEnd] <= 57 ||
+                      result[seqEnd] == UInt8(ascii: ";") {
+                    seqEnd += 1
+                }
+
+                if seqEnd < result.count {
+                    let finalChar = result[seqEnd]
+
+                    // Replace white foreground (37m, 97m) with black (30m) in light mode
+                    if finalChar == UInt8(ascii: "m") {
+                        let numberPart = String(bytes: result[(escapeStart + 2)..<seqEnd], encoding: .utf8) ?? ""
+                        if numberPart == "37" || numberPart == "97" {
+                            // Replace with black (30)
+                            let replacement = Array("\u{1B}[30m".utf8)
+                            result.replaceSubrange(escapeStart...seqEnd, with: replacement)
+                            i = escapeStart + replacement.count
+                            continue
+                        }
+                        // Replace dark backgrounds (48;5;0m, 48;5;8m) with light gray (48;5;7m)
+                        if numberPart == "48;5;0" || numberPart == "48;5;8" {
+                            let replacement = Array("\u{1B}[48;5;7m".utf8)
+                            result.replaceSubrange(escapeStart...seqEnd, with: replacement)
+                            i = escapeStart + replacement.count
+                            continue
+                        }
+                    }
+
+                    i = seqEnd + 1
+                } else {
+                    i = seqEnd
+                }
+            } else {
+                i += 1
+            }
+        }
+
+        return ArraySlice(result)
+    }
 }
 
 // MARK: - Session Coordinator

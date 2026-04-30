@@ -1,13 +1,16 @@
 // Sources/SideNook/EdgeDetection.swift
 import AppKit
 
-/// Determines the nearest screen edge for the given panel center point.
+/// Determines the nearest screen edge for the given panel frame.
+/// Uses the panel's near edge (not center) so that a panel touching the left
+/// edge at x:0 always resolves to .left even when the top edge is closer to
+/// the panel center — this gives correct quadrant-corner behaviour.
 @MainActor
-func nearestScreenEdge(panelCenter: CGPoint, screenFrame: NSRect) -> NookState.ScreenEdge {
-    let distLeft   = panelCenter.x - screenFrame.minX
-    let distRight  = screenFrame.maxX - panelCenter.x
-    let distBottom = panelCenter.y - screenFrame.minY
-    let distTop    = screenFrame.maxY - panelCenter.y
+func nearestScreenEdge(panelFrame: NSRect, screenFrame: NSRect) -> NookState.ScreenEdge {
+    let distLeft   = panelFrame.minX - screenFrame.minX
+    let distRight  = screenFrame.maxX - panelFrame.maxX
+    let distBottom = panelFrame.minY - screenFrame.minY
+    let distTop    = screenFrame.maxY - panelFrame.maxY
 
     let minDist = min(distLeft, distRight, distBottom, distTop)
 

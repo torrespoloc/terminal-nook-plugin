@@ -633,8 +633,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func snapToNearestEdge() {
         let screenFrame = panelScreen.visibleFrame
         let panelFrame = panel.frame
-        let center = CGPoint(x: panelFrame.midX, y: panelFrame.midY)
-        let edge = nearestScreenEdge(panelCenter: center, screenFrame: screenFrame)
+        let edge = nearestScreenEdge(panelFrame: panelFrame, screenFrame: screenFrame)
         // Preserve the dragged y/x exactly: pick offset so expandedOrigin returns
         // panelFrame.minY/minX in the matching quadrant.
         let nextOffset: CGFloat = {

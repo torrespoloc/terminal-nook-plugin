@@ -8,18 +8,13 @@ import AppKit
 
 @MainActor private func slimScroller(in view: NSView) {
     guard let scroller = view.subviews.first(where: { $0 is NSScroller }) as? NSScroller else { return }
-    scroller.controlSize = .mini
-    scroller.translatesAutoresizingMaskIntoConstraints = false
 
-    // Deactivate SwiftTerm's regular-width constraint and replace with a slim one.
-    scroller.constraints
-        .filter { $0.firstAttribute == .width && $0.secondAttribute == .notAnAttribute }
-        .forEach { $0.isActive = false }
-    scroller.widthAnchor.constraint(equalToConstant: 8).isActive = true
+    // Do NOT override SwiftTerm's scroller width constraint. SwiftTerm's column calculation uses
+    // NSScroller.scrollerWidth(for: .regular, scrollerStyle: .legacy) internally — changing the
+    // visual width without matching that value creates a PTY column-count mismatch (~1 column).
 
-    // Lift the scrollbar bottom 8pt above the top of the arrow-button stack so they don't visually collide.
+    // Lift the scrollbar above the arrow-button stack so they don't visually collide.
     if let parent = scroller.superview {
-        // Drop any pre-existing bottom constraints relating scroller to its parent.
         parent.constraints
             .filter { ($0.firstItem === scroller && $0.firstAttribute == .bottom) ||
                       ($0.secondItem === scroller && $0.secondAttribute == .bottom) }
